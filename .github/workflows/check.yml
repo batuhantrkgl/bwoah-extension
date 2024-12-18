@@ -1,0 +1,51 @@
+name: Check Similar Words
+
+on:
+  push:
+    branches:
+      - '**' # Runs on every branch
+  pull_request:
+
+jobs:
+  check-words:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install numpy
+
+      - name: Check for similar words
+        run: |
+          python - <<EOF
+          from difflib import SequenceMatcher
+
+          # Read words from file
+          with open("words.txt", "r") as file:
+              words = [line.strip() for line in file if line.strip()]
+
+          # Check similarity
+          similar_pairs = []
+          for i, word1 in enumerate(words):
+              for j, word2 in enumerate(words):
+                  if i < j:
+                      similarity = SequenceMatcher(None, word1, word2).ratio()
+                      if similarity >= 0.9:
+                          similar_pairs.append((word1, word2, similarity))
+
+          # Output results
+          if similar_pairs:
+              print("Warning: Found similar words:")
+              for word1, word2, similarity in similar_pairs:
+                  print(f"  {word1} and {word2} (Similarity: {similarity:.2%})")
+              exit(1)  # Fail the workflow if similar words are found
+          else:
+              print("No similar words found.")
+          EOF
