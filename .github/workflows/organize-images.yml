@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - images # Adjust the branch as needed
+  workflow_dispatch:
 
 jobs:
   organize_images:
@@ -20,31 +21,34 @@ jobs:
           # List of Formula One team names
           TEAMS=("Mercedes AMG Petronas" "RedBull" "Scuderia Ferrari" "McLaren" "Aston Martin" "Alpine" "VCARB" "Williams" "HAAS" "Alfa Romeo")
           
-          # Get the latest commit message
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          # Get all commit messages
+          COMMITS=$(git log --pretty=format:"%H")
           
-          echo "Commit Message: $COMMIT_MESSAGE"
-          
-          # Iterate through each team name
-          for TEAM in "${TEAMS[@]}"; do
-            if echo "$COMMIT_MESSAGE" | grep -q "$TEAM"; then
-              echo "Team Found: $TEAM"
-              TARGET_FOLDER="root/images/$TEAM"
-              
-              # Create the team folder if it doesn't exist
-              mkdir -p "$TARGET_FOLDER"
-              
-              # Move all files containing the team name into the folder
-              for FILE in $(find . -type f -name "*$TEAM*.*" -not -path "./root/images/*"); do
-                echo "Moving $FILE to $TARGET_FOLDER"
-                mv "$FILE" "$TARGET_FOLDER/"
-              done
-              
-              # Exit the loop since we've processed the matching team
-              break
-            else
-              echo "Team $TEAM not found in commit message."
-            fi
+          for COMMIT in $COMMITS; do
+            COMMIT_MESSAGE=$(git log -1 --pretty=%B $COMMIT)
+            echo "Commit Message: $COMMIT_MESSAGE"
+            
+            # Iterate through each team name
+            for TEAM in "${TEAMS[@]}"; do
+              if echo "$COMMIT_MESSAGE" | grep -q "$TEAM"; then
+                echo "Team Found: $TEAM"
+                TARGET_FOLDER="root/images/$TEAM"
+                
+                # Create the team folder if it doesn't exist
+                mkdir -p "$TARGET_FOLDER"
+                
+                # Move all files containing the team name into the folder
+                for FILE in $(find . -type f -name "*$TEAM*.*" -not -path "./root/images/*"); do
+                  echo "Moving $FILE to $TARGET_FOLDER"
+                  mv "$FILE" "$TARGET_FOLDER/"
+                done
+                
+                # Exit the loop since we've processed the matching team
+                break
+              else
+                echo "Team $TEAM not found in commit message."
+              fi
+            done
           done
 
       # Commit and push changes if any
