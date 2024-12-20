@@ -42,6 +42,8 @@ jobs:
               
               # Exit the loop since we've processed the matching team
               break
+            else
+              echo "Team $TEAM not found in commit message."
             fi
           done
 
@@ -56,4 +58,3 @@ jobs:
           else
             git commit -m "Organized images into team folders"
             git push
-          fi
