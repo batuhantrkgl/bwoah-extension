@@ -28,6 +28,8 @@ jobs:
             COMMIT_MESSAGE=$(git log -1 --pretty=%B $COMMIT)
             echo "Commit Message: $COMMIT_MESSAGE"
             
+            TEAM_FOUND=false
+            
             # Iterate through each team name
             for TEAM in "${TEAMS[@]}"; do
               if echo "$COMMIT_MESSAGE" | grep -q "$TEAM"; then
@@ -43,12 +45,16 @@ jobs:
                   mv "$FILE" "$TARGET_FOLDER/"
                 done
                 
-                # Exit the loop since we've processed the matching team
+                TEAM_FOUND=true
                 break
               else
                 echo "Team $TEAM not found in commit message."
               fi
             done
+            
+            if [ "$TEAM_FOUND" = false ]; then
+              echo "No team found in commit message: $COMMIT_MESSAGE"
+            fi
           done
 
       # Commit and push changes if any
