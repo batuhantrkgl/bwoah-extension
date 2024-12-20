@@ -1,0 +1,59 @@
+name: Organize F1 Team Images
+
+on:
+  push:
+    branches:
+      - images # Adjust the branch as needed
+
+jobs:
+  organize_images:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Define F1 Teams and move images
+      - name: Organize Images
+        run: |
+          # List of Formula One team names
+          TEAMS=("Mercedes AMG Petronas" "RedBull" "Scuderia Ferrari" "McLaren" "Aston Martin" "Alpine" "VCARB" "Williams" "HAAS" "Alfa Romeo")
+          
+          # Get the latest commit message
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          
+          echo "Commit Message: $COMMIT_MESSAGE"
+          
+          # Iterate through each team name
+          for TEAM in "${TEAMS[@]}"; do
+            if echo "$COMMIT_MESSAGE" | grep -q "$TEAM"; then
+              echo "Team Found: $TEAM"
+              TARGET_FOLDER="root/images/$TEAM"
+              
+              # Create the team folder if it doesn't exist
+              mkdir -p "$TARGET_FOLDER"
+              
+              # Move all files containing the team name into the folder
+              for FILE in $(find . -type f -name "*$TEAM*.*" -not -path "./root/images/*"); do
+                echo "Moving $FILE to $TARGET_FOLDER"
+                mv "$FILE" "$TARGET_FOLDER/"
+              done
+              
+              # Exit the loop since we've processed the matching team
+              break
+            fi
+          done
+
+      # Commit and push changes if any
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Organized images into team folders"
+            git push
+          fi
