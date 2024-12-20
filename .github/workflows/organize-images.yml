@@ -25,7 +25,7 @@ jobs:
           COMMITS=$(git log --pretty=format:"%H")
           
           for COMMIT in $COMMITS; do
-            COMMIT_MESSAGE=$(git log -1 --pretty=%B $COMMIT)
+            COMMIT_MESSAGE=$(git log -1 --pretty=%B "$COMMIT")
             echo "Commit Message: $COMMIT_MESSAGE"
             
             TEAM_FOUND=false
@@ -34,16 +34,13 @@ jobs:
             for TEAM in "${TEAMS[@]}"; do
               if echo "$COMMIT_MESSAGE" | grep -q "$TEAM"; then
                 echo "Team Found: $TEAM"
-                TARGET_FOLDER="root/images/$TEAM"
+                TARGET_FOLDER="./root/images/$TEAM"
                 
                 # Create the team folder if it doesn't exist
                 mkdir -p "$TARGET_FOLDER"
                 
                 # Move all files containing the team name into the folder
-                for FILE in $(find . -type f -name "*$TEAM*.*" -not -path "./root/images/*"); do
-                  echo "Moving $FILE to $TARGET_FOLDER"
-                  mv "$FILE" "$TARGET_FOLDER/"
-                done
+                find . -type f -name "*$TEAM*.*" -not -path "./root/images/*" -exec mv {} "$TARGET_FOLDER/" \;
                 
                 TEAM_FOUND=true
                 break
