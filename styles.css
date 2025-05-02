@@ -121,15 +121,17 @@ p {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7); /* Darker background for better visibility */
   padding: 15px;
   border-radius: 8px;
   color: white;
-  z-index: 2;
-  width: 220px;
+  z-index: 10; /* Increased z-index to ensure visibility */
+  width: 250px; /* Increased width for better readability */
   box-sizing: border-box;
   font-size: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Stronger shadow */
+  overflow-y: auto; /* Allow scrolling if needed */
+  max-height: 80vh; /* Limit height */
 }
 
 #drivers-leaderboard {
@@ -749,6 +751,7 @@ body[data-dev-mode="true"] #dev-bottom-section {
   #drivers-leaderboard,
   #teams-leaderboard {
     font-size: 12px;
+    width: 230px; /* Wider on smaller screens */
   }
   .live-data {
     max-width: 900px;
@@ -763,14 +766,14 @@ body[data-dev-mode="true"] #dev-bottom-section {
   #drivers-leaderboard,
   #teams-leaderboard {
     font-size: 11px;
-    width: 180px;
+    width: 200px; /* Keep more width */
   }
 }
 
 @media (max-width: 900px) {
   #drivers-leaderboard,
   #teams-leaderboard {
-    width: 160px;
+    width: 200px; /* Increased width for better readability */
     font-size: 10px;
   }
   .live-data-grid {
@@ -781,7 +784,7 @@ body[data-dev-mode="true"] #dev-bottom-section {
 @media (max-width: 800px) {
   #drivers-leaderboard,
   #teams-leaderboard {
-    width: 160px;
+    width: 180px; /* Increased width */
   }
 }
 
@@ -937,26 +940,20 @@ body[data-dev-mode="true"] #dev-bottom-section {
   justify-content: center;
   gap: 10px;
   margin: 5px 0;
-  padding: 5px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px; /* Increased padding */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* More visible border */
 }
 
 .year-button {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2); /* More visible button */
   border: none;
-  padding: 5px 15px;
+  padding: 8px 20px; /* Larger clickable area */
   color: white;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
-
-.year-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.year-button.active {
-  background: #e10600;
+  font-weight: bold; /* Make text more visible */
+  font-size: 14px; /* Ensure readable size */
 }
 
 .leaderboard-message {

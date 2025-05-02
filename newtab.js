@@ -260,10 +260,17 @@ function toggleDevMode() {
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
   const raceSchedule = document.getElementById('race-schedule');
   
-  console.log('Toggling visibility of UI elements for dev mode');
-  if (driversLeaderboard) driversLeaderboard.style.display = isDevMode ? 'none' : 'block';
-  if (teamsLeaderboard) teamsLeaderboard.style.display = isDevMode ? 'none' : 'block';
-  if (raceSchedule) raceSchedule.style.display = isDevMode ? 'none' : 'block';
+  if (isDevMode) {
+    // In dev mode, hide normal UI
+    if (driversLeaderboard) driversLeaderboard.style.display = 'none';
+    if (teamsLeaderboard) teamsLeaderboard.style.display = 'none';
+    if (raceSchedule) raceSchedule.style.display = 'none';
+  } else {
+    // When exiting dev mode, restore normal UI
+    if (driversLeaderboard) driversLeaderboard.style.display = 'block';
+    if (teamsLeaderboard) teamsLeaderboard.style.display = 'block';
+    if (raceSchedule) raceSchedule.style.display = 'block';
+  }
 
   const leftSection = ensureElement('dev-left-section');
   const rightSection = ensureElement('dev-right-section');
@@ -282,34 +289,28 @@ function toggleDevMode() {
 }
 
 async function checkSeasonBreak(jsonContent) {
-  const currentDate = new Date();
-  const lastRace = jsonContent.races[jsonContent.races.length - 1];
-  const lastRaceDate = new Date(lastRace.sessions.gp || lastRace.sessions.feature || lastRace.sessions.race);
-  const nextSeasonStart = new Date(jsonContent.races[0].sessions.gp || jsonContent.races[0].sessions.feature || jsonContent.races[0].sessions.race);
+  console.log("Running checkSeasonBreak...");
   
-  const seasonBreakStart = new Date(lastRaceDate);
-  seasonBreakStart.setDate(lastRaceDate.getDate() + 1);
-  
-  const hideLeaderboardDate = new Date(seasonBreakStart);
-  hideLeaderboardDate.setDate(seasonBreakStart.getDate() + 7);
-  
-  const showLeaderboardDate = new Date(nextSeasonStart);
-  showLeaderboardDate.setDate(nextSeasonStart.getDate() - 7);
-
-  const isInInitialBreakWeek = currentDate >= seasonBreakStart && currentDate <= hideLeaderboardDate;
-  const isInPreSeasonWeek = currentDate >= showLeaderboardDate && currentDate <= nextSeasonStart;
-  
+  // Show leaderboards by default during seasons
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
   
-  if (isInInitialBreakWeek || isInPreSeasonWeek) {
+  console.log("Setting initial visibility of leaderboards");
+  
+  // Always make them visible by default
+  if (driversLeaderboard) {
     driversLeaderboard.style.display = 'block';
-    teamsLeaderboard.style.display = 'block';
-    await fetchLeaderboard();
-  } else {
-    driversLeaderboard.style.display = 'none';
-    teamsLeaderboard.style.display = 'none';
+    console.log("Drivers leaderboard display set to block");
   }
+  
+  if (teamsLeaderboard) {
+    teamsLeaderboard.style.display = 'block';
+    console.log("Teams leaderboard display set to block");
+  }
+  
+  // Preload leaderboard data with current year
+  console.log("Fetching initial leaderboard data...");
+  await fetchLeaderboard(new Date().getFullYear());
 }
 
 (async () => {
@@ -480,12 +481,61 @@ function formatTime(date) {
 
 const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
   console.time('leaderboard:fetch');
+  
+  console.log(`Fetching leaderboard data for year: ${year}`);
+  
   const driversUrl = `https://api.jolpi.ca/ergast/f1/${year}/driverstandings/?format=json`;
   const teamsUrl = `https://api.jolpi.ca/ergast/f1/${year}/constructorstandings/?format=json`;
-  const driversListUrl = 'https://api.jolpi.ca/ergast/f1/2024/drivers/?format=json';
-  const teamsListUrl = 'https://api.jolpi.ca/ergast/f1/2024/constructors/?format=json';
+  const driversListUrl = `https://api.jolpi.ca/ergast/f1/${year}/drivers/?format=json`;
+  const teamsListUrl = `https://api.jolpi.ca/ergast/f1/${year}/constructors/?format=json`;
 
+  // Make sure leaderboards are visible
+  const driversLeaderboard = document.getElementById('drivers-leaderboard');
+  const teamsLeaderboard = document.getElementById('teams-leaderboard');
+  if (driversLeaderboard) driversLeaderboard.style.display = 'block';
+  if (teamsLeaderboard) teamsLeaderboard.style.display = 'block';
+
+  // Add year selector to the UI - only in drivers list
+  const currentYear = new Date().getFullYear();
+;
+  
+  // Get list containers
+  const driversList = document.getElementById('drivers-list');
+  const teamsList = document.getElementById('teams-list');
+  
+  if (!driversList || !teamsList) {
+    console.error("Could not find drivers-list or teams-list elements");
+    return;
+  }
+  
+  // Only add year selector to drivers list, just loading message to teams list
+  driversList.innerHTML = '<div class="leaderboard-message">Loading standings...</div>';
+  teamsList.innerHTML = '<div class="leaderboard-message">Loading standings...</div>';
+  
+  // Add event listeners with a delay to ensure DOM is ready
+  setTimeout(() => {
+    console.log("Adding click handlers to year buttons");
+    document.querySelectorAll('.year-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const selectedYear = parseInt(e.target.getAttribute('data-year'));
+        console.log(`Year button clicked: ${selectedYear}`);
+        
+        // Update active state visually
+        document.querySelectorAll('.year-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        e.target.classList.add('active');
+        
+        fetchLeaderboard(selectedYear);
+      });
+    });
+  }, 100);
+
+  // Continue with existing fetch logic
   try {
+    console.log("Fetching API data...");
     const [driversResponse, teamsResponse] = await Promise.all([
       fetch(driversUrl),
       fetch(teamsUrl)
@@ -542,6 +592,7 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
       const teamsData = await teamsResponse.json();
 
       if (driversData.MRData.StandingsTable.StandingsLists?.[0]?.DriverStandings) {
+        console.log("Successfully received standings data");
         const driversStandings = driversData.MRData.StandingsTable.StandingsLists[0].DriverStandings;
         const teamsStandings = teamsData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
 
@@ -1225,7 +1276,7 @@ standingsButton.addEventListener('click', async () => {
   teamsLeaderboard.style.display = isHidden ? 'block' : 'none';
   
   if (isHidden) {
-    await fetchLeaderboard(2024);
+    await fetchLeaderboard(new Date().getFullYear()); // Use current year instead of hardcoded 2024
   }
 });
 
@@ -1234,6 +1285,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.time(pageLoadTimer);
   
   try {
+    console.log("DOM Content Loaded - Initializing app...");
+    
+    // Initialize leaderboards before anything else
+    const driversLeaderboard = document.getElementById('drivers-leaderboard');
+    const teamsLeaderboard = document.getElementById('teams-leaderboard');
+    
+    if (driversLeaderboard) driversLeaderboard.style.display = 'block';
+    if (teamsLeaderboard) teamsLeaderboard.style.display = 'block';
+    
     // Wrap each async operation in a promise that won't reject
     const safeInitialize = () => imageCache.initialize().catch(err => {
       console.error('Image cache init failed:', err);
@@ -1268,11 +1328,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize dev mode
     isDevMode = localStorage.getItem(devModeKey) === 'true';
     if (isDevMode) {
+      console.log("Dev mode is active");
       const elements = ['drivers-leaderboard', 'teams-leaderboard', 'race-schedule']
         .map(id => document.getElementById(id))
         .forEach(el => el && (el.style.display = 'none'));
       
       updateLiveSessionData();
+    } else {
+      console.log("Standard mode active, ensuring leaderboards are visible");
+      if (driversLeaderboard) driversLeaderboard.style.display = 'block';
+      if (teamsLeaderboard) teamsLeaderboard.style.display = 'block';
     }
 
     // Initialize buttons and event listeners
@@ -1288,12 +1353,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Add new helper function to organize UI initialization
 function setupUIElements(overlay) {
-  // Initialize leaderboards
-  const driversLeaderboard = document.getElementById('drivers-leaderboard');
-  const teamsLeaderboard = document.getElementById('teams-leaderboard');
-  if (driversLeaderboard) driversLeaderboard.style.display = 'none';
-  if (teamsLeaderboard) teamsLeaderboard.style.display = 'none';
-
+  console.log("Setting up UI elements");
+  // Initialize buttons without affecting leaderboard visibility
+  
   // Initialize buttons
   setupButton('blur-button', overlay, 'isBlurred', 'blur(2px)', 'none', 
     ['blur_off.png', 'blur_on.png']);
@@ -1365,17 +1427,24 @@ function handleBackButtonClick() {
 }
 
 standingsButton.addEventListener('click', async () => {
+  console.log("Standings button clicked");
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
   
-  if (!driversLeaderboard || !teamsLeaderboard) return;
+  if (!driversLeaderboard || !teamsLeaderboard) {
+    console.error("Leaderboard elements not found");
+    return;
+  }
   
   const isHidden = driversLeaderboard.style.display === 'none';
+  console.log(`Leaderboards are currently ${isHidden ? 'hidden' : 'visible'}`);
   
   driversLeaderboard.style.display = isHidden ? 'block' : 'none';
   teamsLeaderboard.style.display = isHidden ? 'block' : 'none';
   
+  console.log(`Leaderboards are now set to ${isHidden ? 'visible' : 'hidden'}`);
+  
   if (isHidden) {
-    await fetchLeaderboard(2024);
+    await fetchLeaderboard(new Date().getFullYear());
   }
 });
