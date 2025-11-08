@@ -5,21 +5,18 @@
   "description": "Bwoah! - Your F1 Homepage: Up-to-date race schedules, leaderboards, and F1 images for enthusiasts.",
   "action": {
     "default_icon": {
-      "16": "icons/Bwoah_Extension_Red-16.png",
-      "48": "icons/Bwoah_Extension_Red-48.png",
-      "128": "icons/Bwoah_Extension_Red-128.png"
+      "16": "icons/Bwoah_Extension_White-16.png",
+      "48": "icons/Bwoah_Extension_White-48.png",
+      "128": "icons/Bwoah_Extension_White-128.png"
     }
-  },
-  "background": {
-    "service_worker": "background.js"
   },
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
   "icons": {
-    "16": "icons/Bwoah_Extension_Red-16.png",
-    "48": "icons/Bwoah_Extension_Red-48.png",
-    "128": "icons/Bwoah_Extension_Red-128.png"
+    "16": "icons/Bwoah_Extension_White-16.png",
+    "48": "icons/Bwoah_Extension_White-48.png",
+    "128": "icons/Bwoah_Extension_White-128.png"
   },
   "permissions": [
     "storage"
@@ -32,5 +29,13 @@
       "resources": ["images/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "Bwoah-YourF1Homepage@Batuhantrkgl"
+    }
+  }
 }

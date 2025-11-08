@@ -126,12 +126,164 @@ p {
   border-radius: 8px;
   color: white;
   z-index: 10; /* Increased z-index to ensure visibility */
-  width: 250px; /* Increased width for better readability */
+  width: auto; /* Auto width based on content */
+  min-width: 250px; /* Minimum width */
   box-sizing: border-box;
   font-size: 16px;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Stronger shadow */
   overflow-y: auto; /* Allow scrolling if needed */
   max-height: 80vh; /* Limit height */
+}
+
+#drivers-leaderboard {
+  max-width: 350px; /* Narrower for driver names */
+}
+
+#teams-leaderboard {
+  max-width: 450px; /* Wider for full team names like "Mercedes-AMG Petronas F1 Team" */
+}
+
+/* ===== Responsive Leaderboard Fitting System =====
+ * These classes are dynamically applied by JavaScript to ensure
+ * the full driver/constructor list fits without scrollbars.
+ * Strategy: compression -> multi-column -> pagination (as last resort)
+ */
+
+/* Dynamic compression classes (added via JS) */
+#drivers-leaderboard.compress,
+#teams-leaderboard.compress {
+  overflow-y: hidden; /* we will ensure it fits */
+}
+
+#drivers-leaderboard.compress .leaderboard-item,
+#teams-leaderboard.compress .leaderboard-item {
+  padding: 3px 0; /* tighter vertical spacing */
+}
+
+#drivers-leaderboard.x-compress .leaderboard-item,
+#teams-leaderboard.x-compress .leaderboard-item {
+  padding: 2px 0;
+  font-size: 0.85em;
+}
+
+/* Multi-column fallback if content still overflows */
+/* Displays items horizontally in 2 columns (grid layout) */
+#drivers-leaderboard.multi-column,
+#teams-leaderboard.multi-column {
+  width: 480px; /* Wider container for 2-column layout */
+  max-height: 90vh; /* More vertical space */
+  padding: 10px;
+}
+
+#drivers-leaderboard.multi-column #drivers-list,
+#teams-leaderboard.multi-column #teams-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-flow: row;
+  column-gap: 12px;
+  row-gap: 0;
+}
+
+#drivers-leaderboard.multi-column .leaderboard-item,
+#teams-leaderboard.multi-column .leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  padding: 2px 0;
+}
+
+#drivers-leaderboard.multi-column h2,
+#teams-leaderboard.multi-column h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+/* Pagination fallback */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.pagination-controls button.active {
+  background: #e67e22;
+}
+
+.pagination-controls button:hover:not(.active) {
+  background: rgba(255,255,255,0.25);
+}
+
+/* Dynamic compression classes (added via JS) */
+#drivers-leaderboard.compress,
+#teams-leaderboard.compress {
+  overflow: hidden; /* we will ensure it fits */
+}
+
+#drivers-leaderboard.compress .leaderboard-item,
+#teams-leaderboard.compress .leaderboard-item {
+  padding: 3px 0; /* tighter vertical spacing */
+}
+
+#drivers-leaderboard.x-compress .leaderboard-item,
+#teams-leaderboard.x-compress .leaderboard-item {
+  padding: 2px 0;
+  font-size: 0.85em;
+}
+
+/* Multi-column fallback if content still overflows */
+#drivers-leaderboard.multi-column #drivers-list,
+#teams-leaderboard.multi-column #teams-list {
+  column-count: 2;
+  column-gap: 12px;
+}
+
+#drivers-leaderboard.multi-column .leaderboard-item,
+#teams-leaderboard.multi-column .leaderboard-item {
+  break-inside: avoid;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Pagination fallback */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.pagination-controls button.active {
+  background: #e67e22;
+}
+
+.pagination-controls button:hover:not(.active) {
+  background: rgba(255,255,255,0.25);
 }
 
 #drivers-leaderboard {
@@ -172,6 +324,7 @@ p {
   flex-grow: 1;
   text-align: left;
   padding-left: 10px;
+  white-space: nowrap;
 }
 
 .leaderboard-points {

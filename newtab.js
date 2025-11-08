@@ -41,6 +41,19 @@ const driverMapping = {
   20: "Kevin Magnussen"
 };
 
+const teamNameMapping = {
+  "Ferrari": "Scuderia Ferrari HP",
+  "Red Bull": "Oracle Red Bull Racing",
+  "Mercedes": "Mercedes-AMG Petronas F1 Team",
+  "McLaren": "McLaren Formula 1 Team",
+  "Aston Martin": "Aston Martin Aramco F1 Team",
+  "Alpine F1 Team": "BWT Alpine F1 Team",
+  "Williams": "Williams Racing",
+  "RB F1 Team": "Visa Cash App RB F1 Team",
+  "Haas F1 Team": "MoneyGram Haas F1 Team",
+  "Sauber": "Stake F1 Team Kick Sauber"
+};
+
 const REAL_TEAM_RADIO_CLIPS = {
   1: "https://livetiming.formula1.com/static/2024/2024-03-02_Pre-Season_Testing/2024-03-02_Practice/TeamRadio/TESVER01_1_20240302_112854.mp3",
   11: "https://livetiming.formula1.com/static/2024/2024-03-02_Pre-Season_Testing/2024-03-02_Practice/TeamRadio/TESPER01_11_20240302_112908.mp3",
@@ -50,8 +63,14 @@ const REAL_TEAM_RADIO_CLIPS = {
 const IMAGE_CACHE_SIZE = 20; // Increased from 5
 const IMAGE_CACHE_KEY = 'bwoahImageCache';
 const SHOWN_IMAGES_KEY = 'bwoahShownImages';
+const REDDIT_CACHE_KEY = 'bwoahRedditCache';
+const REDDIT_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+const GITHUB_CACHE_KEY = 'bwoahGitHubCache';
+const GITHUB_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours (long cache due to rate limits)
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const RACE_SCHEDULE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const TRACK_DETAILS_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 const DEBOUNCE_DELAY = 250; // 250ms
 const API_TIMEOUT = 5000; // 5 seconds
 
@@ -105,6 +124,104 @@ class APICache {
 }
 
 const apiCache = new APICache();
+
+class RaceDataCache {
+  constructor() {
+    this.RACE_SCHEDULE_KEY = 'bwoahRaceScheduleCache';
+    this.TRACK_DETAILS_KEY = 'bwoahTrackDetailsCache';
+  }
+
+  getCachedRaceSchedule(year) {
+    try {
+      const cached = localStorage.getItem(`${this.RACE_SCHEDULE_KEY}_${year}`);
+      if (!cached) return null;
+
+      const data = JSON.parse(cached);
+      if (Date.now() - data.timestamp > RACE_SCHEDULE_CACHE_DURATION) {
+        localStorage.removeItem(`${this.RACE_SCHEDULE_KEY}_${year}`);
+        return null;
+      }
+
+      console.log(`Race schedule cache hit for year ${year}`);
+      return data.races;
+    } catch (error) {
+      console.error('Error reading race schedule cache:', error);
+      return null;
+    }
+  }
+
+  cacheRaceSchedule(year, races) {
+    try {
+      const data = {
+        timestamp: Date.now(),
+        races: races
+      };
+      localStorage.setItem(`${this.RACE_SCHEDULE_KEY}_${year}`, JSON.stringify(data));
+      console.log(`Race schedule cached for year ${year}`);
+    } catch (error) {
+      console.error('Error caching race schedule:', error);
+    }
+  }
+
+  getCachedTrackDetails(raceName) {
+    try {
+      const cached = localStorage.getItem(`${this.TRACK_DETAILS_KEY}_${raceName}`);
+      if (!cached) return null;
+
+      const data = JSON.parse(cached);
+      if (Date.now() - data.timestamp > TRACK_DETAILS_CACHE_DURATION) {
+        localStorage.removeItem(`${this.TRACK_DETAILS_KEY}_${raceName}`);
+        return null;
+      }
+
+      console.log(`Track details cache hit for ${raceName}`);
+      return data.details;
+    } catch (error) {
+      console.error('Error reading track details cache:', error);
+      return null;
+    }
+  }
+
+  cacheTrackDetails(raceName, details) {
+    try {
+      const data = {
+        timestamp: Date.now(),
+        details: details
+      };
+      localStorage.setItem(`${this.TRACK_DETAILS_KEY}_${raceName}`, JSON.stringify(data));
+      console.log(`Track details cached for ${raceName}`);
+    } catch (error) {
+      console.error('Error caching track details:', error);
+    }
+  }
+
+  clearRaceScheduleCache() {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(this.RACE_SCHEDULE_KEY)) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log('Race schedule cache cleared');
+  }
+
+  clearTrackDetailsCache() {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(this.TRACK_DETAILS_KEY)) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log('Track details cache cleared');
+  }
+
+  clearAll() {
+    this.clearRaceScheduleCache();
+    this.clearTrackDetailsCache();
+  }
+}
+
+const raceDataCache = new RaceDataCache();
 
 class ImageCache {
   constructor() {
@@ -315,9 +432,20 @@ async function checkSeasonBreak(jsonContent) {
 
 (async () => {
   try {
-    let response = await fetch(url);
-    if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
-    let jsonContent = await response.json();
+    // Try to get from cache first
+    let jsonContent = null;
+    const cachedRaces = raceDataCache.getCachedRaceSchedule(year);
+    
+    if (cachedRaces) {
+      console.log('Using cached race schedule');
+      jsonContent = { races: cachedRaces };
+    } else {
+      console.log('Fetching fresh race schedule');
+      let response = await fetch(url);
+      if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
+      jsonContent = await response.json();
+      raceDataCache.cacheRaceSchedule(year, jsonContent.races);
+    }
 
     await checkSeasonBreak(jsonContent);
 
@@ -330,9 +458,17 @@ async function checkSeasonBreak(jsonContent) {
       console.log("No upcoming races for this year, checking next year's schedule...");
       year += 1;
       url = `https://raw.githubusercontent.com/sportstimes/f1/main/_db/${motorsport}/${year}.json`;
-      response = await fetch(url);
-      if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
-      jsonContent = await response.json();
+      
+      // Check cache for next year
+      const cachedNextYear = raceDataCache.getCachedRaceSchedule(year);
+      if (cachedNextYear) {
+        jsonContent = { races: cachedNextYear };
+      } else {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
+        jsonContent = await response.json();
+        raceDataCache.cacheRaceSchedule(year, jsonContent.races);
+      }
 
       sortedRaces = jsonContent.races
         .filter(race => new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race) > currentDate)
@@ -349,64 +485,220 @@ async function checkSeasonBreak(jsonContent) {
   }
 })();
 
+async function fetchRedditImages() {
+  console.log('Fetching images from r/F1Porn');
+  
+  // Check cache first
+  try {
+    const cached = localStorage.getItem(REDDIT_CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (Date.now() - data.timestamp < REDDIT_CACHE_DURATION) {
+        console.log('Using cached Reddit images');
+        return data.images;
+      }
+    }
+  } catch (error) {
+    console.error('Error reading Reddit cache:', error);
+  }
+
+  try {
+    // Use background script to fetch Reddit data (bypasses CORS)
+    // Retry mechanism for service worker connection
+    let response;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        response = await new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage(
+            { action: 'fetchReddit' },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else if (response && response.success) {
+                resolve(response.data);
+              } else {
+                reject(new Error(response ? response.error : 'No response from background'));
+              }
+            }
+          );
+        });
+        break; // Success, exit loop
+      } catch (error) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          throw error;
+        }
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 100 * attempts));
+      }
+    }
+
+    const posts = response.data.children;
+
+    const imageUrls = posts
+      .filter(post => {
+        const url = post.data.url;
+        // Check if it's a direct image link
+        return url && (
+          url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+          url.includes('i.redd.it') ||
+          url.includes('i.imgur.com')
+        );
+      })
+      .map(post => {
+        let url = post.data.url;
+        // Convert imgur gallery links to direct image links
+        if (url.includes('imgur.com') && !url.includes('i.imgur.com')) {
+          url = url.replace('imgur.com', 'i.imgur.com') + '.jpg';
+        }
+        return url;
+      })
+      .filter(url => url); // Remove any null/undefined
+
+    console.log(`Found ${imageUrls.length} images from r/F1Porn`);
+
+    // Cache the results
+    try {
+      localStorage.setItem(REDDIT_CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        images: imageUrls
+      }));
+    } catch (error) {
+      console.error('Error caching Reddit images:', error);
+    }
+
+    return imageUrls;
+  } catch (error) {
+    console.error('Error fetching Reddit images:', error);
+    return [];
+  }
+}
+
 async function fetchImages() {
   console.log('Starting fetchImages()');
+  let allImages = [];
+
+  // Fetch GitHub images (with caching for rate limit protection)
   try {
-    console.log(`Fetching images from GitHub API: ${apiUrl}`);
-    const response = await fetch(apiUrl);
+    // Check cache first
+    const cachedGitHub = localStorage.getItem(GITHUB_CACHE_KEY);
+    let useCache = false;
     
-    if (!response.ok) {
-      if (response.status === 403) {
-        console.warn('GitHub API rate limit exceeded, using fallback background');
-        return ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='];
+    if (cachedGitHub) {
+      try {
+        const parsed = JSON.parse(cachedGitHub);
+        // If cache is still valid, use it
+        if (Date.now() - parsed.timestamp < GITHUB_CACHE_DURATION) {
+          console.log('Using cached GitHub images (cache still valid)');
+          allImages = parsed.images;
+          useCache = true;
+        }
+      } catch (parseError) {
+        console.warn('Error parsing GitHub cache:', parseError);
       }
-      throw new Error(`GitHub API responded with status: ${response.status}`);
     }
-    
-    const data = await response.json();
-    console.log(`Received ${data.length} items from GitHub API`);
 
-    let allImages = [];
-
-    for (const item of data) {
-      if (item.type === 'dir') {
-        console.log(`Processing directory: ${item.name}`);
-        try {
-          const dirResponse = await fetch(item.url);
-          if (!dirResponse.ok) {
-            console.warn(`Skipping directory ${item.name} due to failed response`);
-            continue;
+    // Only fetch if not using cache
+    if (!useCache) {
+      console.log(`Fetching images from GitHub API: ${apiUrl}`);
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          console.warn('GitHub API rate limit exceeded - using cached images');
+          // Use cached images even if expired when rate limited
+          if (cachedGitHub) {
+            try {
+              const parsed = JSON.parse(cachedGitHub);
+              allImages = parsed.images || [];
+              console.log(`Loaded ${allImages.length} images from expired cache (rate limit fallback)`);
+            } catch (parseError) {
+              console.warn('Could not load cached images:', parseError);
+            }
           }
-          
-          const dirContents = await dirResponse.json();
-          if (!Array.isArray(dirContents)) {
-            console.warn(`Skipping directory ${item.name} due to invalid response format`);
-            continue;
-          }
+        } else {
+          console.warn(`GitHub API responded with status: ${response.status}`);
+        }
+      } else {
+        const data = await response.json();
+        console.log(`Received ${data.length} items from GitHub API`);
 
-          const images = dirContents
-            .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-          console.log(`Found ${images.length} images in directory ${item.name}`);
-          
-          allImages = allImages.concat(images.map(image => image.download_url));
-        } catch (dirError) {
-          console.error(`Error processing directory ${item.name}:`, dirError);
-          continue;
+        for (const item of data) {
+          if (item.type === 'dir') {
+            console.log(`Processing directory: ${item.name}`);
+            try {
+              const dirResponse = await fetch(item.url);
+              if (!dirResponse.ok) {
+                console.warn(`Skipping directory ${item.name} due to failed response`);
+                continue;
+              }
+              
+              const dirContents = await dirResponse.json();
+              if (!Array.isArray(dirContents)) {
+                console.warn(`Skipping directory ${item.name} due to invalid response format`);
+                continue;
+              }
+
+              const images = dirContents
+                .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+              console.log(`Found ${images.length} images in directory ${item.name}`);
+              
+              allImages = allImages.concat(images.map(image => image.download_url));
+            } catch (dirError) {
+              console.error(`Error processing directory ${item.name}:`, dirError);
+              continue;
+            }
+          }
+        }
+
+        // Cache the successfully fetched images
+        if (allImages.length > 0) {
+          try {
+            localStorage.setItem(GITHUB_CACHE_KEY, JSON.stringify({
+              timestamp: Date.now(),
+              images: allImages
+            }));
+            console.log(`Cached ${allImages.length} GitHub images`);
+          } catch (cacheError) {
+            console.warn('Error caching GitHub images:', cacheError);
+          }
         }
       }
     }
-
-    console.log(`Total images found: ${allImages.length}`);
-    if (allImages.length === 0) {
-      console.warn('No images found in any directory, using fallback background');
-      return ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='];
-    }
-    return allImages;
-
   } catch (error) {
-    console.error('Error in fetchImages():', error);
+    console.error('Error fetching GitHub images:', error);
+    // Try to use cached images as last resort
+    try {
+      const cachedGitHub = localStorage.getItem(GITHUB_CACHE_KEY);
+      if (cachedGitHub) {
+        const parsed = JSON.parse(cachedGitHub);
+        allImages = parsed.images || [];
+        console.log(`Loaded ${allImages.length} images from cache (error fallback)`);
+      }
+    } catch (fallbackError) {
+      console.warn('Could not load cached images after error:', fallbackError);
+    }
+  }
+
+  // Fetch Reddit images
+  try {
+    const redditImages = await fetchRedditImages();
+    allImages = allImages.concat(redditImages);
+  } catch (error) {
+    console.error('Error fetching Reddit images:', error);
+  }
+
+  console.log(`Total images found: ${allImages.length} (GitHub + Reddit)`);
+  
+  if (allImages.length === 0) {
+    console.warn('No images found from any source, using fallback background');
     return ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='];
   }
+  
+  return allImages;
 }
 
 function getRandomImage(images) {
@@ -562,7 +854,7 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
       teamsList.innerHTML = sortedTeams.map((team, index) => `
         <div class="leaderboard-item" data-url="https://www.formula1.com/en/teams/${team.name.toLowerCase().replace(/\s+/g, '-').replace("red-bull-racing", "red-bull").replace("alpine-f1-team", "alpine").replace("sauber", "kick-sauber").replace("rb-f1-team", "rb").replace("haas-f1-team", "haas").replace("red-bull", "red-bull-racing")}">
           <span class="leaderboard-position">${index + 1}</span>
-          <span class="leaderboard-name">${team.name}</span>
+          <span class="leaderboard-name">${teamNameMapping[team.name] || team.name}</span>
           <span class="leaderboard-points">0 pts</span>
         </div>
       `).join('');
@@ -587,6 +879,9 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
         });
       });
 
+      // Ensure lists fit without internal scrollbars
+      ensureLeaderboardsFit();
+
     } else {
       const driversData = await driversResponse.json();
       const teamsData = await teamsResponse.json();
@@ -607,7 +902,7 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
         teamsList.innerHTML = teamsStandings.map(team => `
           <div class="leaderboard-item" data-url="https://www.formula1.com/en/teams/${team.Constructor.name.toLowerCase().replace(/\s+/g, '-').replace("red-bull-racing", "red-bull").replace("alpine-f1-team", "alpine").replace("sauber", "kick-sauber").replace("rb-f1-team", "rb").replace("haas-f1-team", "haas").replace("red-bull", "red-bull-racing")}">
             <span class="leaderboard-position">${team.position}</span>
-            <span class="leaderboard-name">${team.Constructor.name}</span>
+            <span class="leaderboard-name">${teamNameMapping[team.Constructor.name] || team.Constructor.name}</span>
             <span class="leaderboard-points">${team.points} pts</span>
           </div>
         `).join('');
@@ -618,6 +913,9 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
             window.open(url, '_blank');
           });
         });
+        
+        // Ensure lists fit without internal scrollbars
+        ensureLeaderboardsFit();
         return;
       }
     }
@@ -631,17 +929,174 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
   }
 }, DEBOUNCE_DELAY);
 
+// ---- Responsive fitting helpers for leaderboards ----
+// Ensures both driver and constructor leaderboards fit without internal scrollbars
+// by progressively applying compression, multi-column layout, or pagination
+function ensureLeaderboardsFit() {
+  tryFit('drivers');
+  tryFit('teams');
+}
+
+/**
+ * Tries to fit the leaderboard content within its container without scrollbars.
+ * Applies strategies progressively: compression -> multi-column -> pagination.
+ * @param {string} kind - 'drivers' or 'teams'
+ */
+function tryFit(kind) {
+  const container = document.getElementById(`${kind}-leaderboard`);
+  const list = document.getElementById(`${kind}-list`);
+  if (!container || !list) return;
+
+  // Clean previous state
+  container.classList.remove('compress', 'x-compress', 'multi-column');
+  removePagination(container);
+  container.style.overflowY = 'auto';
+
+  // Use requestAnimationFrame to ensure DOM has updated
+  requestAnimationFrame(() => {
+    const fits = () => {
+      const hasOverflow = container.scrollHeight > container.clientHeight + 2;
+      console.log(`${kind} - scrollHeight: ${container.scrollHeight}, clientHeight: ${container.clientHeight}, hasOverflow: ${hasOverflow}`);
+      return !hasOverflow;
+    };
+
+    if (fits()) {
+      container.style.overflowY = 'hidden';
+      console.log(`${kind} fits without compression`);
+      return; // Already fits, no action needed
+    }
+
+    // Step 1: light compression - reduce item padding
+    container.classList.add('compress');
+    container.style.overflowY = 'hidden';
+    if (fits()) {
+      console.log(`${kind} fits with light compression`);
+      return;
+    }
+
+    // Step 2: extra compression - smaller font and tighter spacing
+    container.classList.add('x-compress');
+    if (fits()) {
+      console.log(`${kind} fits with extra compression`);
+      return;
+    }
+
+    // Step 3: pagination - show 10 items per page with numbered navigation
+    console.log(`${kind} needs pagination`);
+    container.classList.remove('compress', 'x-compress');
+    container.style.overflowY = 'hidden';
+    applyPagination(container, list, '.leaderboard-item', 10);
+  });
+}
+
+/**
+ * Removes pagination controls and shows all items
+ */
+function removePagination(container) {
+  const controls = container.querySelector('.pagination-controls');
+  if (controls) controls.remove();
+  const items = container.querySelectorAll('.leaderboard-item');
+  items.forEach(it => (it.style.display = ''));
+}
+
+/**
+ * Applies pagination to a list when it doesn't fit using other methods.
+ * Shows pageSize items at a time with numbered page buttons and Prev/Next controls.
+ * @param {HTMLElement} container - The leaderboard container
+ * @param {HTMLElement} listEl - The list element containing items
+ * @param {string} itemSelector - CSS selector for list items
+ * @param {number} pageSize - Number of items to show per page
+ */
+function applyPagination(container, listEl, itemSelector, pageSize = 10) {
+  const items = Array.from(listEl.querySelectorAll(itemSelector));
+  if (items.length <= pageSize) return; // not needed
+
+  // Calculate total pages
+  let totalPages = Math.ceil(items.length / pageSize);
+  const remainder = items.length % pageSize;
+  
+  // If last page has only 1-2 items, merge with previous page
+  if (remainder > 0 && remainder <= 2 && totalPages > 1) {
+    totalPages = totalPages - 1;
+  }
+  
+  let current = 1;
+
+  const controls = document.createElement('div');
+  controls.className = 'pagination-controls';
+
+  const render = (page) => {
+    current = Math.max(1, Math.min(totalPages, page));
+    
+    items.forEach((it, idx) => {
+      let pageIndex;
+      
+      if (page === totalPages) {
+        // Last page shows remaining items (could be more than pageSize)
+        pageIndex = idx >= (totalPages - 1) * pageSize ? totalPages : Math.floor(idx / pageSize) + 1;
+      } else {
+        pageIndex = Math.floor(idx / pageSize) + 1;
+      }
+      
+      it.style.display = pageIndex === current ? '' : 'none';
+    });
+    
+    // update button states
+    controls.querySelectorAll('button[data-page]')?.forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.page) === current);
+    });
+  };
+
+  // Build numbered buttons (compact)
+  for (let p = 1; p <= totalPages; p++) {
+    const btn = document.createElement('button');
+    btn.textContent = String(p);
+    btn.dataset.page = String(p);
+    btn.addEventListener('click', () => render(p));
+    if (p === 1) btn.classList.add('active');
+    controls.appendChild(btn);
+  }
+
+  // Attach and render
+  container.appendChild(controls);
+  render(1);
+}
+
 async function fetchRaceSchedule() {
   try {
     const sessions = closestRace.sessions;
+    
+    // Build session HTML only for sessions that exist
+    let sessionsHTML = '';
+    
+    const sessionMapping = [
+      { key: 'fp1', label: 'FP1' },
+      { key: 'fp2', label: 'FP2' },
+      { key: 'fp3', label: 'FP3' },
+      { key: 'sprintQualifying', label: 'Sprint Qualifying' },
+      { key: 'sprint_qualifying', label: 'Sprint Qualifying' },
+      { key: 'sprint', label: 'Sprint' },
+      { key: 'qualifying', label: 'Qualifying' }
+    ];
+    
+    // Add regular sessions
+    sessionMapping.forEach(({ key, label }) => {
+      if (sessions[key]) {
+        sessionsHTML += `<div class="session-time" data-time="${sessions[key]}"><strong>${label}:</strong> ${formatDate(sessions[key])} ${formatTime(sessions[key])}</div>`;
+      }
+    });
+    
+    // Add race (check multiple possible keys)
+    const raceTime = sessions.gp || sessions.feature || sessions.race2 || sessions.race;
+    if (raceTime) {
+      const raceLabel = sessions.feature ? 'Feature Race' : sessions.race2 ? 'Race 2' : 'Race';
+      sessionsHTML += `<div class="session-time" data-time="${raceTime}"><strong>${raceLabel}:</strong> ${formatDate(raceTime)} ${formatTime(raceTime)}</div>`;
+    }
+    
     raceScheduleContainer.innerHTML = `
       <h2 style="text-align: left;">Upcoming Race: ${closestRace.slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h2>
       <div class="horizontal-schedule">
-        <div class="session-time" data-time="${sessions.fp1}"><strong>FP1:</strong> ${formatDate(sessions.fp1)} ${formatTime(sessions.fp1)}</div>
-        <div class="session-time" data-time="${sessions.fp2}"><strong>FP2:</strong> ${formatDate(sessions.fp2)} ${formatTime(sessions.fp2)}</div>
-        <div class="session-time" data-time="${sessions.fp3}"><strong>FP3:</strong> ${formatDate(sessions.fp3)} ${formatTime(sessions.fp3)}</div>
-        <div class="session-time" data-time="${sessions.qualifying}"><strong>Qualifying:</strong> ${formatDate(sessions.qualifying)} ${formatTime(sessions.qualifying)}</div>
-        <div class="session-time" data-time="${sessions.gp || sessions.feature || sessions.race2 || sessions.race}"><strong>Race:</strong> ${formatDate(sessions.gp || sessions.feature || sessions.race2 || sessions.race)} ${formatTime(sessions.gp || sessions.feature || sessions.race2 || sessions.race)}</div>
+        ${sessionsHTML}
       </div>
     `;
 
@@ -726,31 +1181,43 @@ async function fetchRandomWord() {
 }
 
 async function fetchTrackDetails(race) {
-  const targetUrl = `https://f1-circuit-api.batuhantrkgl.tech/api/circuits/${race}`;
-  const proxyUrl = `http://f1-circuit-api.batuhantrkgl.tech/proxy?url=${encodeURIComponent(targetUrl)}`;
+  // Check cache first
+  const cached = raceDataCache.getCachedTrackDetails(race);
+  if (cached) {
+    console.log(`Using cached track details for ${race}`);
+    return cached;
+  }
+
+  const apiUrl = `https://f1-circuit-api.vercel.app/api/circuits/${race}`;
   try {
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error(`Network response was not ok for URL: ${targetUrl}`);
+    console.log(`Fetching fresh track details for ${race}`);
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`Network response was not ok for URL: ${apiUrl}`);
     const data = await response.json();
 
-    const name = data.name || 'N/A';
-    const firstGrandPrix = data.first_grand_prix || 'N/A';
-    const numberOfLaps = data.number_of_laps || 'N/A';
-    const circuitLength = data.circuit_length ? `${data.circuit_length} km` : 'N/A';
-    const raceDistance = data.race_distance ? `${data.race_distance} km` : 'N/A';
-    const lapRecord = data.lap_record || 'N/A';
-
-    return {
-      name,
-      firstGrandPrix,
-      numberOfLaps,
-      circuitLength,
-      raceDistance,
-      lapRecord
+    const trackDetails = {
+      name: data.name || 'N/A',
+      firstGrandPrix: data.first_grand_prix || 'N/A',
+      numberOfLaps: data.number_of_laps || 'N/A',
+      circuitLength: data.circuit_length ? `${data.circuit_length} km` : 'N/A',
+      raceDistance: data.race_distance ? `${data.race_distance} km` : 'N/A',
+      lapRecord: data.lap_record || 'N/A'
     };
+
+    // Cache the result
+    raceDataCache.cacheTrackDetails(race, trackDetails);
+
+    return trackDetails;
   } catch (error) {
     console.error('Error fetching track details:', error);
-    return 'Error loading track details.';
+    return {
+      name: 'Error',
+      firstGrandPrix: 'N/A',
+      numberOfLaps: 'N/A',
+      circuitLength: 'N/A',
+      raceDistance: 'N/A',
+      lapRecord: 'N/A'
+    };
   }
 }
 displayRandomImage();
@@ -839,14 +1306,16 @@ discordButton.addEventListener('click', () => {
 });
 
 
-document.addEventListener('visibilitychange', async () => {
-  console.log('Visibility changed:', document.visibilityState);
-  if (document.visibilityState === 'visible') {
-    console.log('Tab became visible, refreshing content');
-    displayRandomImage();
-    fetchRandomWord();
-  }
-});
+// Removed auto-refresh on tab visibility change
+// Users reported background changing unexpectedly when alt-tabbing
+// document.addEventListener('visibilitychange', async () => {
+//   console.log('Visibility changed:', document.visibilityState);
+//   if (document.visibilityState === 'visible') {
+//     console.log('Tab became visible, refreshing content');
+//     displayRandomImage();
+//     fetchRandomWord();
+//   }
+// });
 
 const blurButton = document.getElementById('blur-button');
 const blurButtonIcon = blurButton.querySelector('img');
@@ -1200,13 +1669,6 @@ document.addEventListener('keydown', (event) => {
     if (otherButtonsContainer && otherButtonsContainer.style.display === 'flex') {
       handleBackButtonClick();
     }
-    
-    const driversLeaderboard = document.getElementById('drivers-leaderboard');
-    const teamsLeaderboard = document.getElementById('teams-leaderboard');
-    if (driversLeaderboard && driversLeaderboard.style.display === 'block') {
-      driversLeaderboard.style.display = 'none';
-      teamsLeaderboard.style.display = 'none';
-    }
 
     // Add this new block to handle race schedule
     if (showTrackDetails || showSchedule) {
@@ -1250,20 +1712,6 @@ const standingsButton = document.getElementById('standings-button');
 document.getElementById('drivers-leaderboard').style.display = 'none';
 document.getElementById('teams-leaderboard').style.display = 'none';
 
-standingsButton.addEventListener('click', () => {
-  const driversLeaderboard = document.getElementById('drivers-leaderboard');
-  const teamsLeaderboard = document.getElementById('teams-leaderboard');
-  
-  if (driversLeaderboard.style.display === 'none') {
-    driversLeaderboard.style.display = 'block';
-    teamsLeaderboard.style.display = 'block';
-    fetchLeaderboard(2024);
-  } else {
-    driversLeaderboard.style.display = 'none';
-    teamsLeaderboard.style.display = 'none';
-  }
-});
-
 standingsButton.addEventListener('click', async () => {
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
@@ -1276,7 +1724,7 @@ standingsButton.addEventListener('click', async () => {
   teamsLeaderboard.style.display = isHidden ? 'block' : 'none';
   
   if (isHidden) {
-    await fetchLeaderboard(new Date().getFullYear()); // Use current year instead of hardcoded 2024
+    await fetchLeaderboard(new Date().getFullYear());
   }
 });
 
@@ -1385,34 +1833,6 @@ function setupButton(buttonId, overlay, storageKey, activeValue, inactiveValue, 
   }
 }
 
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    const otherButtonsContainer = document.getElementById('others-container');
-    const toggleButtonsContainer = document.getElementById('toggle-buttons');
-    
-    if (otherButtonsContainer && otherButtonsContainer.style.display === 'flex') {
-      handleBackButtonClick();
-    }
-    
-    const driversLeaderboard = document.getElementById('drivers-leaderboard');
-    const teamsLeaderboard = document.getElementById('teams-leaderboard');
-    if (driversLeaderboard && driversLeaderboard.style.display === 'block') {
-      driversLeaderboard.style.display = 'none';
-      teamsLeaderboard.style.display = 'none';
-    }
-
-    // Add this new block to handle race schedule
-    if (showTrackDetails || showSchedule) {
-      showTrackDetails = false;
-      showSchedule = false;
-      raceScheduleContainer.innerHTML = raceScheduleContainerinnerHTML;
-      attachEventListeners();
-    }
-  } else if (event.ctrlKey && event.shiftKey && event.key === 'Q') {
-    toggleDevMode();
-  }
-});
-
 function handleBackButtonClick() {
   const containers = initializeContainers();
   otherButtonsContainer = containers.otherButtonsContainer;
@@ -1426,25 +1846,3 @@ function handleBackButtonClick() {
   }
 }
 
-standingsButton.addEventListener('click', async () => {
-  console.log("Standings button clicked");
-  const driversLeaderboard = document.getElementById('drivers-leaderboard');
-  const teamsLeaderboard = document.getElementById('teams-leaderboard');
-  
-  if (!driversLeaderboard || !teamsLeaderboard) {
-    console.error("Leaderboard elements not found");
-    return;
-  }
-  
-  const isHidden = driversLeaderboard.style.display === 'none';
-  console.log(`Leaderboards are currently ${isHidden ? 'hidden' : 'visible'}`);
-  
-  driversLeaderboard.style.display = isHidden ? 'block' : 'none';
-  teamsLeaderboard.style.display = isHidden ? 'block' : 'none';
-  
-  console.log(`Leaderboards are now set to ${isHidden ? 'visible' : 'hidden'}`);
-  
-  if (isHidden) {
-    await fetchLeaderboard(new Date().getFullYear());
-  }
-});
