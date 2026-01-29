@@ -1,7 +1,8 @@
 const imageContainer = document.getElementById('image-container');
 const driversList = document.getElementById('drivers-list');
 const teamsList = document.getElementById('teams-list');
-const randomWordContainer = document.getElementById('random-word');
+const nextRaceTitle = document.getElementById('next-race-title');
+const countdownTimer = document.getElementById('countdown-timer');
 const raceScheduleContainer = document.getElementById('race-schedule');
 const trackButton = document.getElementById('track-button');
 const scheduleButton = document.getElementById('schedule-button');
@@ -90,7 +91,7 @@ class APICache {
   async fetch(url, options = {}) {
     const cacheKey = url + JSON.stringify(options);
     const cached = this.cache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       console.log(`Cache hit for ${url}`);
       return cached.data;
@@ -101,17 +102,17 @@ class APICache {
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
     try {
-      const response = await fetch(url, { 
-        ...options, 
-        signal: controller.signal 
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
       });
       const data = await response.json();
-      
+
       this.cache.set(cacheKey, {
         timestamp: Date.now(),
         data
       });
-      
+
       return data;
     } finally {
       clearTimeout(timeoutId);
@@ -137,6 +138,7 @@ class RaceDataCache {
       if (!cached) return null;
 
       const data = JSON.parse(cached);
+      // Removed extensive validation that might fail
       if (Date.now() - data.timestamp > RACE_SCHEDULE_CACHE_DURATION) {
         localStorage.removeItem(`${this.RACE_SCHEDULE_KEY}_${year}`);
         return null;
@@ -254,7 +256,7 @@ class ImageCache {
           const urls = JSON.parse(savedCache);
           await this.validateCachedUrls(urls);
         }
-        
+
         if (this.cache.size < IMAGE_CACHE_SIZE) {
           await this.fillCache();
         }
@@ -267,15 +269,9 @@ class ImageCache {
   }
 
   async validateCachedUrls(urls) {
-    const validUrls = await Promise.all(
-      urls.map(url => 
-        fetch(url, { method: 'HEAD' })
-          .then(res => res.ok ? url : null)
-          .catch(() => null)
-      )
-    );
-    
-    this.cache = new Set(validUrls.filter(Boolean));
+    // Skip HEAD check because it causes CORS errors for many image hosts (Reddit, Imgur)
+    // We'll trust the cache expiration instead, or let the image fail to load naturally
+    this.cache = new Set(urls);
   }
 
   async preloadImage(url) {
@@ -289,7 +285,7 @@ class ImageCache {
     });
 
     this.loading.set(url, loadPromise);
-    
+
     try {
       await loadPromise;
       this.cache.add(url);
@@ -303,7 +299,7 @@ class ImageCache {
 
     const images = await fetchImages();
     const availableImages = images.filter(url => !this.shownImages.has(url));
-    
+
     // Reset shown images if we've seen all images
     if (availableImages.length === 0) {
       console.log('All images have been shown, resetting tracking');
@@ -321,7 +317,7 @@ class ImageCache {
         .slice(0, needed);
       this.preloadQueue.push(...newImages);
     }
-    
+
     while (this.preloadQueue.length > 0) {
       const batch = this.preloadQueue.splice(0, 3);
       await Promise.all(batch.map(url => this.preloadImage(url)));
@@ -336,13 +332,13 @@ class ImageCache {
 
     const index = Math.floor(Math.random() * images.length);
     const image = images[index];
-    
+
     // Track shown image
     this.shownImages.add(image);
     localStorage.setItem(SHOWN_IMAGES_KEY, JSON.stringify([...this.shownImages]));
-    
+
     this.cache.delete(image);
-    
+
     if (this.cache.size < IMAGE_CACHE_SIZE / 2) {
       this.fillCache().catch(console.error);
     }
@@ -372,11 +368,11 @@ function toggleDevMode() {
   isDevMode = !isDevMode;
   console.log(`Dev mode ${isDevMode ? 'enabled' : 'disabled'}`);
   localStorage.setItem(devModeKey, isDevMode);
-  
+
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
   const raceSchedule = document.getElementById('race-schedule');
-  
+
   if (isDevMode) {
     // In dev mode, hide normal UI
     if (driversLeaderboard) driversLeaderboard.style.display = 'none';
@@ -392,7 +388,7 @@ function toggleDevMode() {
   const leftSection = ensureElement('dev-left-section');
   const rightSection = ensureElement('dev-right-section');
   const bottomSection = ensureElement('dev-bottom-section');
-  
+
   leftSection.style.display = isDevMode ? 'block' : 'none';
   rightSection.style.display = isDevMode ? 'block' : 'none';
   bottomSection.style.display = isDevMode ? 'block' : 'none';
@@ -400,94 +396,46 @@ function toggleDevMode() {
   if (!isDevMode) {
     displayRandomImage();
   }
-  
+
   updateLiveSessionData();
   console.log(`Dev mode ${isDevMode ? 'enabled' : 'disabled'}`);
 }
 
 async function checkSeasonBreak(jsonContent) {
   console.log("Running checkSeasonBreak...");
-  
+
   // Show leaderboards by default during seasons
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
-  
+
   console.log("Setting initial visibility of leaderboards");
-  
+
   // Always make them visible by default
   if (driversLeaderboard) {
     driversLeaderboard.style.display = 'block';
     console.log("Drivers leaderboard display set to block");
   }
-  
+
   if (teamsLeaderboard) {
     teamsLeaderboard.style.display = 'block';
     console.log("Teams leaderboard display set to block");
   }
-  
+
   // Preload leaderboard data with current year
   console.log("Fetching initial leaderboard data...");
   await fetchLeaderboard(new Date().getFullYear());
 }
 
+// IIFE Removed - logic moved to initApp to avoid hoisting issues
+/*
 (async () => {
-  try {
-    // Try to get from cache first
-    let jsonContent = null;
-    const cachedRaces = raceDataCache.getCachedRaceSchedule(year);
-    
-    if (cachedRaces) {
-      console.log('Using cached race schedule');
-      jsonContent = { races: cachedRaces };
-    } else {
-      console.log('Fetching fresh race schedule');
-      let response = await fetch(url);
-      if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
-      jsonContent = await response.json();
-      raceDataCache.cacheRaceSchedule(year, jsonContent.races);
-    }
-
-    await checkSeasonBreak(jsonContent);
-
-    let currentDate = new Date();
-    let sortedRaces = jsonContent.races
-      .filter(race => new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race) > currentDate)
-      .sort((a, b) => new Date(a.sessions.gp || a.sessions.feature || a.sessions.race2 || a.sessions.race) - new Date(b.sessions.gp || a.sessions.feature || b.sessions.race2 || b.sessions.race));
-
-    if (!sortedRaces.length) {
-      console.log("No upcoming races for this year, checking next year's schedule...");
-      year += 1;
-      url = `https://raw.githubusercontent.com/sportstimes/f1/main/_db/${motorsport}/${year}.json`;
-      
-      // Check cache for next year
-      const cachedNextYear = raceDataCache.getCachedRaceSchedule(year);
-      if (cachedNextYear) {
-        jsonContent = { races: cachedNextYear };
-      } else {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
-        jsonContent = await response.json();
-        raceDataCache.cacheRaceSchedule(year, jsonContent.races);
-      }
-
-      sortedRaces = jsonContent.races
-        .filter(race => new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race) > currentDate)
-        .sort((a, b) => new Date(a.sessions.gp || a.sessions.feature || a.sessions.race2 || a.sessions.race) - new Date(b.sessions.gp || a.sessions.feature || b.sessions.race2 || b.sessions.race));
-
-      if (!sortedRaces.length) {
-        raceScheduleContainer.innerHTML = '<p>No upcoming races found for the next year either.</p>';
-      }
-    }
-
-    closestRace = sortedRaces[0];
-  } catch (error) {
-    console.error('Error fetching race schedule:', error);
-  }
+  ...
 })();
+*/
 
 async function fetchRedditImages() {
   console.log('Fetching images from r/F1Porn');
-  
+
   // Check cache first
   try {
     const cached = localStorage.getItem(REDDIT_CACHE_KEY);
@@ -508,7 +456,7 @@ async function fetchRedditImages() {
     let response;
     let attempts = 0;
     const maxAttempts = 3;
-    
+
     while (attempts < maxAttempts) {
       try {
         response = await new Promise((resolve, reject) => {
@@ -586,7 +534,7 @@ async function fetchImages() {
     // Check cache first
     const cachedGitHub = localStorage.getItem(GITHUB_CACHE_KEY);
     let useCache = false;
-    
+
     if (cachedGitHub) {
       try {
         const parsed = JSON.parse(cachedGitHub);
@@ -605,7 +553,7 @@ async function fetchImages() {
     if (!useCache) {
       console.log(`Fetching images from GitHub API: ${apiUrl}`);
       const response = await fetch(apiUrl);
-      
+
       if (!response.ok) {
         if (response.status === 403) {
           console.warn('GitHub API rate limit exceeded - using cached images');
@@ -635,7 +583,7 @@ async function fetchImages() {
                 console.warn(`Skipping directory ${item.name} due to failed response`);
                 continue;
               }
-              
+
               const dirContents = await dirResponse.json();
               if (!Array.isArray(dirContents)) {
                 console.warn(`Skipping directory ${item.name} due to invalid response format`);
@@ -645,7 +593,7 @@ async function fetchImages() {
               const images = dirContents
                 .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
               console.log(`Found ${images.length} images in directory ${item.name}`);
-              
+
               allImages = allImages.concat(images.map(image => image.download_url));
             } catch (dirError) {
               console.error(`Error processing directory ${item.name}:`, dirError);
@@ -692,12 +640,12 @@ async function fetchImages() {
   }
 
   console.log(`Total images found: ${allImages.length} (GitHub + Reddit)`);
-  
+
   if (allImages.length === 0) {
     console.warn('No images found from any source, using fallback background');
     return ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='];
   }
-  
+
   return allImages;
 }
 
@@ -718,7 +666,7 @@ async function displayRandomImage() {
   console.time('displayRandomImage');
   try {
     const cachedUrls = localStorage.getItem(IMAGE_CACHE_KEY);
-    
+
     if (cachedUrls) {
       const urls = JSON.parse(cachedUrls);
       if (urls.length > 0) {
@@ -727,7 +675,7 @@ async function displayRandomImage() {
         const imageUrl = urls[randomIndex];
         console.log('Using image from localStorage:', imageUrl);
         imageContainer.innerHTML = `<img src="${imageUrl}" alt="Random Image">`;
-        
+
         // Initialize cache in background
         setTimeout(() => imageCache.initialize(), 100);
         return;
@@ -773,9 +721,9 @@ function formatTime(date) {
 
 const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
   console.time('leaderboard:fetch');
-  
+
   console.log(`Fetching leaderboard data for year: ${year}`);
-  
+
   const driversUrl = `https://api.jolpi.ca/ergast/f1/${year}/driverstandings/?format=json`;
   const teamsUrl = `https://api.jolpi.ca/ergast/f1/${year}/constructorstandings/?format=json`;
   const driversListUrl = `https://api.jolpi.ca/ergast/f1/${year}/drivers/?format=json`;
@@ -789,21 +737,21 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
 
   // Add year selector to the UI - only in drivers list
   const currentYear = new Date().getFullYear();
-;
-  
+  ;
+
   // Get list containers
   const driversList = document.getElementById('drivers-list');
   const teamsList = document.getElementById('teams-list');
-  
+
   if (!driversList || !teamsList) {
     console.error("Could not find drivers-list or teams-list elements");
     return;
   }
-  
+
   // Only add year selector to drivers list, just loading message to teams list
   driversList.innerHTML = '<div class="leaderboard-message">Loading standings...</div>';
   teamsList.innerHTML = '<div class="leaderboard-message">Loading standings...</div>';
-  
+
   // Add event listeners with a delay to ensure DOM is ready
   setTimeout(() => {
     console.log("Adding click handlers to year buttons");
@@ -813,13 +761,13 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
         e.stopPropagation();
         const selectedYear = parseInt(e.target.getAttribute('data-year'));
         console.log(`Year button clicked: ${selectedYear}`);
-        
+
         // Update active state visually
         document.querySelectorAll('.year-button').forEach(btn => {
           btn.classList.remove('active');
         });
         e.target.classList.add('active');
-        
+
         fetchLeaderboard(selectedYear);
       });
     });
@@ -829,8 +777,8 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
   try {
     console.log("Fetching API data...");
     const [driversResponse, teamsResponse] = await Promise.all([
-      fetch(driversUrl),
-      fetch(teamsUrl)
+      fetch(driversUrl).catch(e => ({ ok: false })),
+      fetch(teamsUrl).catch(e => ({ ok: false }))
     ]);
 
     if (!driversResponse.ok || !teamsResponse.ok) {
@@ -841,6 +789,11 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
       ]);
 
       if (!driversListResponse.ok || !teamsListResponse.ok) {
+        // Fallback to previous year if current year fails (e.g. season hasn't started)
+        if (year === new Date().getFullYear()) {
+          console.warn(`Current year ${year} data unavailable, falling back to ${year - 1}`);
+          return fetchLeaderboard(year - 1);
+        }
         throw new Error('Both standings and lists unavailable');
       }
 
@@ -913,13 +866,18 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
             window.open(url, '_blank');
           });
         });
-        
+
         // Ensure lists fit without internal scrollbars
         ensureLeaderboardsFit();
         return;
+      } else {
+        // Fallback for valid 200 response but empty data (typical for new season)
+        if (year === new Date().getFullYear()) {
+          console.warn(`Current year ${year} has empty data, falling back to ${year - 1}`);
+          return fetchLeaderboard(year - 1);
+        }
       }
     }
-
   } catch (error) {
     console.error('Error in fetchLeaderboard():', error);
     if (driversList) driversList.innerHTML = '<p>Error loading drivers leaderboard.</p>';
@@ -930,11 +888,26 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
 }, DEBOUNCE_DELAY);
 
 // ---- Responsive fitting helpers for leaderboards ----
-// Ensures both driver and constructor leaderboards fit without internal scrollbars
-// by progressively applying compression, multi-column layout, or pagination
 function ensureLeaderboardsFit() {
-  tryFit('drivers');
-  tryFit('teams');
+  const driversContainer = document.getElementById('drivers-leaderboard');
+  const driversList = document.getElementById('drivers-list');
+  // Clean previous pagination if any
+  removePagination(driversContainer);
+  // Apply pagination only to drivers (10 items per page)
+  applyPagination(driversContainer, driversList, '.leaderboard-item', 10);
+
+  // Remove pagination from teams if any (shouldn't be needed as it has 10 items)
+  const teamsContainer = document.getElementById('teams-leaderboard');
+  removePagination(teamsContainer);
+
+  // Add spacer to teams leaderboard to match drivers height (pagination buttons)
+  // Check if spacer already acts
+  if (!teamsContainer.querySelector('.spacer-controls')) {
+    const spacer = document.createElement('div');
+    spacer.className = 'spacer-controls';
+    spacer.innerHTML = '<button class="pagination-arrow"></button>'; // dummy content for height
+    teamsContainer.appendChild(spacer);
+  }
 }
 
 /**
@@ -1000,8 +973,8 @@ function removePagination(container) {
 }
 
 /**
- * Applies pagination to a list when it doesn't fit using other methods.
- * Shows pageSize items at a time with numbered page buttons and Prev/Next controls.
+ * Applies pagination to a list.
+ * Shows pageSize items at a time with "Prev" and "Next" arrow buttons.
  * @param {HTMLElement} container - The leaderboard container
  * @param {HTMLElement} listEl - The list element containing items
  * @param {string} itemSelector - CSS selector for list items
@@ -1012,50 +985,57 @@ function applyPagination(container, listEl, itemSelector, pageSize = 10) {
   if (items.length <= pageSize) return; // not needed
 
   // Calculate total pages
-  let totalPages = Math.ceil(items.length / pageSize);
-  const remainder = items.length % pageSize;
-  
-  // If last page has only 1-2 items, merge with previous page
-  if (remainder > 0 && remainder <= 2 && totalPages > 1) {
-    totalPages = totalPages - 1;
-  }
-  
+  const totalPages = Math.ceil(items.length / pageSize);
   let current = 1;
 
   const controls = document.createElement('div');
   controls.className = 'pagination-controls';
 
+  // Create Arrow Buttons
+  const prevBtn = document.createElement('button');
+  prevBtn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="arrow-icon">
+      <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+  prevBtn.className = 'pagination-arrow prev';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="arrow-icon">
+      <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+  nextBtn.className = 'pagination-arrow next';
+
   const render = (page) => {
     current = Math.max(1, Math.min(totalPages, page));
-    
+
+    // Show/Hide Items
     items.forEach((it, idx) => {
-      let pageIndex;
-      
-      if (page === totalPages) {
-        // Last page shows remaining items (could be more than pageSize)
-        pageIndex = idx >= (totalPages - 1) * pageSize ? totalPages : Math.floor(idx / pageSize) + 1;
+      const start = (current - 1) * pageSize;
+      const end = start + pageSize;
+      if (idx >= start && idx < end) {
+        it.style.display = 'flex'; // Ensure flex layout is kept
+        // Add animation class re-trigger if desired, but simple display toggle is smoother for pagination
       } else {
-        pageIndex = Math.floor(idx / pageSize) + 1;
+        it.style.display = 'none';
       }
-      
-      it.style.display = pageIndex === current ? '' : 'none';
     });
-    
-    // update button states
-    controls.querySelectorAll('button[data-page]')?.forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.page) === current);
-    });
+
+    // Update Button States
+    prevBtn.disabled = current === 1;
+    nextBtn.disabled = current === totalPages;
+
+    prevBtn.classList.toggle('disabled', current === 1);
+    nextBtn.classList.toggle('disabled', current === totalPages);
   };
 
-  // Build numbered buttons (compact)
-  for (let p = 1; p <= totalPages; p++) {
-    const btn = document.createElement('button');
-    btn.textContent = String(p);
-    btn.dataset.page = String(p);
-    btn.addEventListener('click', () => render(p));
-    if (p === 1) btn.classList.add('active');
-    controls.appendChild(btn);
-  }
+  prevBtn.addEventListener('click', () => render(current - 1));
+  nextBtn.addEventListener('click', () => render(current + 1));
+
+  controls.appendChild(prevBtn);
+  controls.appendChild(nextBtn);
 
   // Attach and render
   container.appendChild(controls);
@@ -1065,10 +1045,10 @@ function applyPagination(container, listEl, itemSelector, pageSize = 10) {
 async function fetchRaceSchedule() {
   try {
     const sessions = closestRace.sessions;
-    
+
     // Build session HTML only for sessions that exist
     let sessionsHTML = '';
-    
+
     const sessionMapping = [
       { key: 'fp1', label: 'FP1' },
       { key: 'fp2', label: 'FP2' },
@@ -1078,42 +1058,45 @@ async function fetchRaceSchedule() {
       { key: 'sprint', label: 'Sprint' },
       { key: 'qualifying', label: 'Qualifying' }
     ];
-    
+
     // Add regular sessions
     sessionMapping.forEach(({ key, label }) => {
       if (sessions[key]) {
         sessionsHTML += `<div class="session-time" data-time="${sessions[key]}"><strong>${label}:</strong> ${formatDate(sessions[key])} ${formatTime(sessions[key])}</div>`;
       }
     });
-    
+
     // Add race (check multiple possible keys)
     const raceTime = sessions.gp || sessions.feature || sessions.race2 || sessions.race;
     if (raceTime) {
       const raceLabel = sessions.feature ? 'Feature Race' : sessions.race2 ? 'Race 2' : 'Race';
       sessionsHTML += `<div class="session-time" data-time="${raceTime}"><strong>${raceLabel}:</strong> ${formatDate(raceTime)} ${formatTime(raceTime)}</div>`;
     }
-    
-    raceScheduleContainer.innerHTML = `
-      <h2 style="text-align: left;">Upcoming Race: ${closestRace.slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h2>
-      <div class="horizontal-schedule">
-        ${sessionsHTML}
-      </div>
-    `;
 
-    document.querySelectorAll('.session-time').forEach(item => {
-      let originalTime = item.innerHTML;
-      item.addEventListener('click', () => {
-        const time = new Date(item.getAttribute('data-time'));
-        if (item.style.color === 'white') {
-          item.innerHTML = originalTime;
-          item.style.color = '';
-          item.style.cursor = 'pointer';
-        } else {
-          item.innerHTML = `Local Time: ${time.toLocaleString()}`;
-          item.style.color = 'white';
-        }
+    if (raceScheduleContainer) {
+      raceScheduleContainer.style.display = 'block';
+      raceScheduleContainer.innerHTML = `
+        <h2 style="text-align: left;">Upcoming Race: ${closestRace.slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h2>
+        <div class="horizontal-schedule">
+          ${sessionsHTML}
+        </div>
+      `;
+
+      document.querySelectorAll('.session-time').forEach(item => {
+        let originalTime = item.innerHTML;
+        item.addEventListener('click', () => {
+          const time = new Date(item.getAttribute('data-time'));
+          if (item.style.color === 'white') {
+            item.innerHTML = originalTime;
+            item.style.color = '';
+            item.style.cursor = 'pointer';
+          } else {
+            item.innerHTML = `Local Time: ${time.toLocaleString()}`;
+            item.style.color = 'white';
+          }
+        });
       });
-    });
+    }
   } catch (error) {
     console.error('Error fetching race schedule:', error);
     raceScheduleContainer.innerHTML = '<p>Error loading race schedule.</p>';
@@ -1143,41 +1126,63 @@ function sortDriversByTeam(drivers, constructors) {
     const constructor = constructors.find(team => {
       return team.url === driver.Constructors?.[0]?.url;
     });
-    
+
     if (constructor) {
       driversByTeam[constructor.constructorId].push(driver);
     }
   });
 
-  return FALLBACK_DRIVERS_ORDER.flatMap(teamId => 
+  return FALLBACK_DRIVERS_ORDER.flatMap(teamId =>
     driversByTeam[teamId] || []
   );
 }
 
-async function fetchRandomWord() {
-  const wordsUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/words.txt`;
+const pad = (n) => n < 10 ? '0' + n : n;
 
-  try {
-    const response = await fetch(wordsUrl);
-    if (!response.ok) throw new Error(`Network response was not ok for URL: ${wordsUrl}`);
-    const text = await response.text();
-    const words = text.split('\n').filter(word => word.trim().length > 0);
-    const randomWord = words[Math.floor(Math.random() * words.length)];
-    randomWordContainer.textContent = randomWord;
-    if (randomWord.length > 100) {
-      randomWordContainer.style.fontSize = '14px';
-    } else if (randomWord.length > 150) {
-      randomWordContainer.style.fontSize = '12px';
-    } else if (randomWord.length > 200) {
-      randomWordContainer.style.fontSize = '12px';
-      randomWordContainer.style.wordBreak = 'break-word';
-    } else {
-      randomWordContainer.style.fontSize = '20px';
-    }
-  } catch (error) {
-    console.error('Error fetching random word:', error);
-    randomWordContainer.textContent = 'Error loading word.';
+function updateCountdown(targetDate) {
+  const now = new Date();
+  const diff = targetDate - now;
+
+  if (diff <= 0) {
+    countdownTimer.innerHTML = '<div class="race-live" style="font-size: 1.5rem; font-weight: bold; color: #ff1801;">RACE IS LIVE!</div>';
+    return;
   }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  // If structure exists, update text, else create structure
+  if (!document.getElementById('days-count')) {
+    countdownTimer.innerHTML = `
+        <div class="time-unit"><span id="days-count">${pad(days)}</span><label>DAYS</label></div>
+        <div class="time-unit"><span id="hours-count">${pad(hours)}</span><label>HRS</label></div>
+        <div class="time-unit"><span id="minutes-count">${pad(minutes)}</span><label>MIN</label></div>
+     `;
+  } else {
+    document.getElementById('days-count').innerText = pad(days);
+    document.getElementById('hours-count').innerText = pad(hours);
+    document.getElementById('minutes-count').innerText = pad(minutes);
+  }
+}
+
+function startCountdown(race) {
+  if (!race) {
+    if (nextRaceTitle) nextRaceTitle.innerText = "No Upcoming Races";
+    return;
+  }
+
+  // Proper race name formatting
+  const raceName = race.name || "Unknown GP";
+  if (nextRaceTitle) nextRaceTitle.innerText = raceName;
+
+  const raceDate = new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race);
+
+  updateCountdown(raceDate);
+  // Update every minute (60000ms) to update minutes. 
+  // For seconds we'd need 1000ms. Code above only shows minutes, so 1s is overkill but smooths transition.
+  // Let's stick to 1 minute as the UI shows MIN as smallest unit.
+  setInterval(() => updateCountdown(raceDate), 30000);
 }
 
 async function fetchTrackDetails(race) {
@@ -1221,15 +1226,17 @@ async function fetchTrackDetails(race) {
   }
 }
 displayRandomImage();
-fetchRandomWord();
+// fetchRandomWord(); // Removed
 fetchLeaderboard();
 
 trackButton.addEventListener('click', async () => {
   showTrackDetails = true;
   showSchedule = false;
-  const raceName = 'pre-season-testing';
+  const raceName = 'bahrain';
   const trackDetails = await fetchTrackDetails(raceName);
-  raceScheduleContainer.innerHTML = `
+  if (raceScheduleContainer) {
+    raceScheduleContainer.style.display = 'block';
+    raceScheduleContainer.innerHTML = `
     <h2>Track Details</h2>
     <div class="horizontal-schedule">
       <div><strong>Name of the Circuit:</strong> ${trackDetails.name}</div>
@@ -1240,6 +1247,7 @@ trackButton.addEventListener('click', async () => {
       <div><strong>Lap Record:</strong> ${trackDetails.lapRecord}</div>
     </div>
   `;
+  }
 });
 
 scheduleButton.addEventListener('click', () => {
@@ -1248,50 +1256,13 @@ scheduleButton.addEventListener('click', () => {
   fetchRaceSchedule();
 });
 
-let othersButton = document.getElementById('others-button');
-let otherButtonsContainer = document.getElementById('others-container');
-let toggleButtonsContainer = document.getElementById('toggle-buttons');
 
-function initializeContainers() {
-  otherButtonsContainer = document.getElementById('others-container');
-  toggleButtonsContainer = document.getElementById('toggle-buttons');
-
-  if (!otherButtonsContainer) {
-    otherButtonsContainer = document.createElement('div');
-    otherButtonsContainer.id = 'others-container';
-    otherButtonsContainer.style.display = 'none';
-    document.body.appendChild(otherButtonsContainer);
-  }
-
-  if (!toggleButtonsContainer) {
-    toggleButtonsContainer = document.createElement('div');
-    toggleButtonsContainer.id = 'toggle-buttons';
-    toggleButtonsContainer.style.display = 'flex';
-    document.body.appendChild(toggleButtonsContainer);
-  }
-
-  return { otherButtonsContainer, toggleButtonsContainer };
-}
-
-othersButton.addEventListener('click', () => {
-  const containers = initializeContainers();
-  otherButtonsContainer = containers.otherButtonsContainer;
-  toggleButtonsContainer = containers.toggleButtonsContainer;
-  
-  if (otherButtonsContainer.style.display === 'none') {
-    otherButtonsContainer.style.display = 'flex';
-    toggleButtonsContainer.style.display = 'none';
-  } else {
-    otherButtonsContainer.style.display = 'none';
-    toggleButtonsContainer.style.display = 'flex';
-  }
-});
 
 const donateButton = document.getElementById('donate-button');
 const githubButton = document.getElementById('github-button');
 const discordButton = document.getElementById('discord-button');
 const newsButton = document.getElementById('news-button');
-const f1Button = document.getElementById('f1-button');
+
 
 donateButton.addEventListener('click', () => {
   window.open('https://buymeacoffee.com/batuhantrkgl', '_blank');
@@ -1354,101 +1325,50 @@ function toggleDarkness() {
 
 darknessButton.addEventListener('click', toggleDarkness);
 
+
+
+
+
+// --- Simplified Controls Toggle ---
+
+// "Other" button opens the secondary menu
+const othersButton = document.getElementById('others-button');
+const othersContainer = document.getElementById('others-container');
+const controlsBar = document.getElementById('controls-bar');
 const backButton = document.getElementById('back-button');
 
-const raceScheduleContainerinnerHTML = `
-<div id="toggle-buttons">
-      <button id="f1-button" class="toggle-button">
-        <img src="images/f1.svg" alt="F1 Website">
-      </button>
-      <button id="track-button" class="toggle-button">
-        <img src="images/flag.png" alt="Track Details">
-      </button>
-      <button id="schedule-button" class="toggle-button">
-        <img src="images/schedule.png" alt="Schedule Details">
-      </button>
-      <button id="news-button" class="toggle-button">
-        <img src="images/news.png" alt="News from F1">
-      </button>
-      <button id="others-button" class="toggle-button">
-        <img src="images/others.png" alt="Other Stuff">
-      </button>
-</div>
-`;
-
-function handleBackButtonClick() {
-  const containers = initializeContainers();
-  otherButtonsContainer = containers.otherButtonsContainer;
-  toggleButtonsContainer = containers.toggleButtonsContainer;
-  
-  if (otherButtonsContainer && toggleButtonsContainer) {
-    otherButtonsContainer.style.display = 'none';
-    toggleButtonsContainer.style.display = 'flex';
-    toggleButtonsContainer.innerHTML = raceScheduleContainerinnerHTML;
-    attachEventListeners();
-  }
-}
-
-function attachEventListeners() {
-  const othersButton = document.getElementById('others-button');
-  if (!othersButton) {
-    console.error("others-button not found!");
-    return;
-  }
-
+if (othersButton && othersContainer && controlsBar && backButton) {
   othersButton.addEventListener('click', () => {
-    const otherButtonsContainer = document.getElementById('others-container');
-    const toggleButtonsContainer = document.getElementById('toggle-buttons');
-    if (!otherButtonsContainer || !toggleButtonsContainer) {
-      console.error("otherButtonsContainer or toggleButtonsContainer is null!");
-      return;
-    }
-    otherButtonsContainer.style.display = 'flex';
-    toggleButtonsContainer.style.display = 'none';
+    controlsBar.style.display = 'none';
+    othersContainer.style.display = 'flex';
   });
 
-  // Initialize f1Button only once here
-  const f1Button = document.getElementById('f1-button');
-  if (f1Button) {
-    f1Button.addEventListener('click', () => {
-      window.open('https://f1.com/', '_blank');
-    });
-  }
-
-  document.getElementById('track-button').addEventListener('click', async () => {
-    showTrackDetails = true;
-    showSchedule = false;
-    const raceName = 'pre-season-testing';
-    const trackDetails = await fetchTrackDetails(raceName);
-    raceScheduleContainer.innerHTML = `
-      <h2>Track Details</h2>
-      <div class="horizontal-schedule">
-        <div><strong>Name of the Circuit:</strong> ${trackDetails.name}</div>
-        <div><strong>First Grand Prix:</strong> ${trackDetails.firstGrandPrix}</div>
-        <div><strong>Number of Laps:</strong> ${trackDetails.numberOfLaps}</div>
-        <div><strong>Circuit Length:</strong> ${trackDetails.circuitLength}</div>
-        <div><strong>Race Distance:</strong> ${trackDetails.raceDistance}</div>
-        <div><strong>Lap Record:</strong> ${trackDetails.lapRecord}</div>
-      </div>
-    `;
-  });
-
-  document.getElementById('schedule-button').addEventListener('click', () => {
-    showTrackDetails = false;
-    showSchedule = true;
-    fetchRaceSchedule();
-  });
-
-  document.getElementById('news-button').addEventListener('click', () => {
-    window.open('https://www.formula1.com/en/latest/all.html', '_blank');
-  });
-
-  backButton.addEventListener('click', handleBackButtonClick);
-
-  document.querySelectorAll('.toggle-button').forEach(button => {
-    button.classList.add('animated-button');
+  backButton.addEventListener('click', () => {
+    othersContainer.style.display = 'none';
+    controlsBar.style.display = 'flex';
   });
 }
+
+// Link Listeners
+const f1Button = document.getElementById('f1-button');
+if (f1Button) {
+  f1Button.addEventListener('click', () => {
+    window.open('https://f1.com/', '_blank');
+  });
+}
+
+
+
+document.getElementById('news-button').addEventListener('click', () => {
+  window.open('https://www.formula1.com/en/latest/all.html', '_blank');
+});
+
+
+
+document.querySelectorAll('.toggle-button').forEach(button => {
+  button.classList.add('animated-button');
+});
+
 
 async function checkLiveSession() {
   console.log('Checking for live session');
@@ -1632,7 +1552,7 @@ function formatRaceControl(messages) {
 
 function formatPositions(positions) {
   if (!Array.isArray(positions)) return '<div>No position data available</div>';
-  
+
   return positions
     .filter(pos => pos && typeof pos === 'object' && pos.position && pos.driver_number)
     .map(pos => `
@@ -1663,19 +1583,26 @@ setInterval(updateLiveSessionData, 30000);
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
-    const otherButtonsContainer = document.getElementById('others-container');
-    const toggleButtonsContainer = document.getElementById('toggle-buttons');
-    
-    if (otherButtonsContainer && otherButtonsContainer.style.display === 'flex') {
-      handleBackButtonClick();
+    const othersContainer = document.getElementById('others-container');
+    const controlsBar = document.getElementById('controls-bar');
+    const raceScheduleContainer = document.getElementById('race-schedule');
+
+    // Close "Others" menu if open
+    if (othersContainer && window.getComputedStyle(othersContainer).display === 'flex') {
+      othersContainer.style.display = 'none';
+      if (controlsBar) controlsBar.style.display = 'flex';
     }
 
-    // Add this new block to handle race schedule
+    // Reset Race Schedule / Track Details if open
     if (showTrackDetails || showSchedule) {
       showTrackDetails = false;
       showSchedule = false;
-      raceScheduleContainer.innerHTML = raceScheduleContainerinnerHTML;
-      attachEventListeners();
+      // Just hide/reset schedule here if needed, or rely on other logic
+      // For now, let's just ensure we don't break
+      if (raceScheduleContainer) raceScheduleContainer.innerHTML = '';
+      if (controlsBar) controlsBar.style.display = 'flex';
+      const toggleButtons = document.getElementById('toggle-buttons');
+      if (toggleButtons) toggleButtons.style.display = 'flex';
     }
   } else if (event.ctrlKey && event.shiftKey && event.key === 'Q') {
     toggleDevMode();
@@ -1715,14 +1642,14 @@ document.getElementById('teams-leaderboard').style.display = 'none';
 standingsButton.addEventListener('click', async () => {
   const driversLeaderboard = document.getElementById('drivers-leaderboard');
   const teamsLeaderboard = document.getElementById('teams-leaderboard');
-  
+
   if (!driversLeaderboard || !teamsLeaderboard) return;
-  
+
   const isHidden = driversLeaderboard.style.display === 'none';
-  
+
   driversLeaderboard.style.display = isHidden ? 'block' : 'none';
   teamsLeaderboard.style.display = isHidden ? 'block' : 'none';
-  
+
   if (isHidden) {
     await fetchLeaderboard(new Date().getFullYear());
   }
@@ -1731,17 +1658,17 @@ standingsButton.addEventListener('click', async () => {
 document.addEventListener('DOMContentLoaded', async () => {
   const pageLoadTimer = 'pageLoad:' + Date.now();
   console.time(pageLoadTimer);
-  
+
   try {
     console.log("DOM Content Loaded - Initializing app...");
-    
+
     // Initialize leaderboards before anything else
     const driversLeaderboard = document.getElementById('drivers-leaderboard');
     const teamsLeaderboard = document.getElementById('teams-leaderboard');
-    
+
     if (driversLeaderboard) driversLeaderboard.style.display = 'block';
     if (teamsLeaderboard) teamsLeaderboard.style.display = 'block';
-    
+
     // Wrap each async operation in a promise that won't reject
     const safeInitialize = () => imageCache.initialize().catch(err => {
       console.error('Image cache init failed:', err);
@@ -1757,21 +1684,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
+    /*
     const safeRandomWord = () => fetchRandomWord().catch(err => {
       console.error('Random word fetch failed:', err);
       return null;
     });
+    */
 
     // Execute all initialization tasks in parallel
     await Promise.all([
       safeInitialize(),
-      safeLeaderboard(),
-      safeRandomWord()
+      safeLeaderboard()
+      // safeRandomWord() // Removed
     ]);
 
     // Initialize UI elements after core functionality is loaded
-    const containers = initializeContainers();
+
     const overlay = document.getElementById('overlay');
+
+    // Initialize schedule and countdown
+    await initRaceData();
 
     // Initialize dev mode
     isDevMode = localStorage.getItem(devModeKey) === 'true';
@@ -1780,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elements = ['drivers-leaderboard', 'teams-leaderboard', 'race-schedule']
         .map(id => document.getElementById(id))
         .forEach(el => el && (el.style.display = 'none'));
-      
+
       updateLiveSessionData();
     } else {
       console.log("Standard mode active, ensuring leaderboards are visible");
@@ -1790,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize buttons and event listeners
     setupUIElements(overlay);
-    attachEventListeners();
+
 
   } catch (error) {
     console.error('Error during page initialization:', error);
@@ -1799,15 +1731,71 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+async function initRaceData() {
+  try {
+    // Try to get from cache first
+    let jsonContent = null;
+    const cachedRaces = raceDataCache.getCachedRaceSchedule(year);
+
+    if (cachedRaces) {
+      console.log('Using cached race schedule');
+      jsonContent = { races: cachedRaces };
+    } else {
+      console.log('Fetching fresh race schedule');
+      let response = await fetch(url);
+      if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
+      jsonContent = await response.json();
+      raceDataCache.cacheRaceSchedule(year, jsonContent.races);
+    }
+
+    await checkSeasonBreak(jsonContent);
+
+    let currentDate = new Date();
+    let sortedRaces = jsonContent.races
+      .filter(race => new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race) > currentDate)
+      .sort((a, b) => new Date(a.sessions.gp || a.sessions.feature || a.sessions.race2 || a.sessions.race) - new Date(b.sessions.gp || a.sessions.feature || b.sessions.race2 || b.sessions.race));
+
+    if (!sortedRaces.length) {
+      console.log("No upcoming races for this year, checking next year's schedule...");
+      year += 1;
+      url = `https://raw.githubusercontent.com/sportstimes/f1/main/_db/${motorsport}/${year}.json`;
+
+      // Check cache for next year
+      const cachedNextYear = raceDataCache.getCachedRaceSchedule(year);
+      if (cachedNextYear) {
+        jsonContent = { races: cachedNextYear };
+      } else {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response was not ok for URL: ${url}`);
+        jsonContent = await response.json();
+        raceDataCache.cacheRaceSchedule(year, jsonContent.races);
+      }
+
+      sortedRaces = jsonContent.races
+        .filter(race => new Date(race.sessions.gp || race.sessions.feature || race.sessions.race2 || race.sessions.race) > currentDate)
+        .sort((a, b) => new Date(a.sessions.gp || a.sessions.feature || a.sessions.race2 || a.sessions.race) - new Date(b.sessions.gp || a.sessions.feature || b.sessions.race2 || b.sessions.race));
+
+      if (!sortedRaces.length) {
+        raceScheduleContainer.innerHTML = '<p>No upcoming races found for the next year either.</p>';
+      }
+    }
+
+    closestRace = sortedRaces[0];
+    startCountdown(closestRace);
+  } catch (error) {
+    console.error('Error fetching race schedule:', error);
+  }
+}
+
 // Add new helper function to organize UI initialization
 function setupUIElements(overlay) {
   console.log("Setting up UI elements");
   // Initialize buttons without affecting leaderboard visibility
-  
+
   // Initialize buttons
-  setupButton('blur-button', overlay, 'isBlurred', 'blur(2px)', 'none', 
+  setupButton('blur-button', overlay, 'isBlurred', 'blur(2px)', 'none',
     ['blur_off.png', 'blur_on.png']);
-  
+
   setupButton('darkness-button', overlay, 'isDark', 'rgba(0, 0, 0, 0.6)', 'none',
     ['darkness.png', 'darkness_off.png']);
 
@@ -1815,7 +1803,53 @@ function setupUIElements(overlay) {
   const backButton = document.getElementById('back-button');
   if (backButton) {
     backButton.style.display = 'none';
-    backButton.addEventListener('click', handleBackButtonClick);
+    backButton.addEventListener('click', () => {
+      const othersContainer = document.getElementById('others-container');
+      const controlsBar = document.getElementById('controls-bar');
+      if (othersContainer) othersContainer.style.display = 'none';
+      if (controlsBar) controlsBar.style.display = 'flex';
+    });
+  }
+
+  // Initialize countdown toggle
+  setupButton('countdown-toggle-button', document.getElementById('next-race-countdown'), 'isCountdownVisible', 'flex', 'none',
+    ['visibility.svg', 'visibility.svg']);
+
+  // Custom logic for countdown because setupButton assumes 'backdropFilter' or 'background' property for overlay, but here we toggle display
+  // We need to override or handle this specific button separately if setupButton is too specific.
+  // setupButton implementation uses overlay.style[propertyName] based on buttonId.includes('blur')
+  // Let's implement it manually to be safe.
+
+  const countdownToggle = document.getElementById('countdown-toggle-button');
+  const countdownEl = document.getElementById('next-race-countdown');
+
+  if (countdownToggle && countdownEl) {
+    // Default to visible if not set
+    const stored = localStorage.getItem('isCountdownVisible');
+    const isVisible = stored === null || stored === 'true';
+
+    // Apply initial state
+    countdownEl.style.display = isVisible ? 'inline-flex' : 'none';
+    // Inline-flex matches the css .featured-card { display: inline-flex }
+
+    // Update icon opacity or style if needed to show state?
+    // For now just toggle
+
+    countdownToggle.addEventListener('click', () => {
+      const currentlyVisible = countdownEl.style.display !== 'none';
+      if (currentlyVisible) {
+        countdownEl.style.display = 'none';
+        localStorage.setItem('isCountdownVisible', 'false');
+        countdownToggle.style.opacity = '0.5'; // Visual feedback for "off"
+      } else {
+        countdownEl.style.display = 'inline-flex';
+        localStorage.setItem('isCountdownVisible', 'true');
+        countdownToggle.style.opacity = '1';
+      }
+    });
+
+    // Set initial opacity
+    countdownToggle.style.opacity = isVisible ? '1' : '0.5';
   }
 }
 
@@ -1823,11 +1857,11 @@ function setupUIElements(overlay) {
 function setupButton(buttonId, overlay, storageKey, activeValue, inactiveValue, [activeIcon, inactiveIcon]) {
   const button = document.getElementById(buttonId);
   const buttonIcon = button?.querySelector('img');
-  
+
   if (button && buttonIcon) {
     const isActive = localStorage.getItem(storageKey) === 'true';
     const propertyName = buttonId.includes('blur') ? 'backdropFilter' : 'background';
-    
+
     overlay.style[propertyName] = isActive ? activeValue : inactiveValue;
     buttonIcon.src = `images/${isActive ? activeIcon : inactiveIcon}`;
   }
@@ -1837,7 +1871,7 @@ function handleBackButtonClick() {
   const containers = initializeContainers();
   otherButtonsContainer = containers.otherButtonsContainer;
   toggleButtonsContainer = containers.toggleButtonsContainer;
-  
+
   if (otherButtonsContainer && toggleButtonsContainer) {
     otherButtonsContainer.style.display = 'none';
     toggleButtonsContainer.style.display = 'flex';

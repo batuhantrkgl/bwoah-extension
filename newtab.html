@@ -4,70 +4,103 @@
 <head>
   <title>New Tab with Bwoah Extension</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
   </style>
-  <link rel="stylesheet" href="styles.css"> <!-- Use the correct path here -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
   <div id="image-container">
     <img src="" alt="Background Image">
   </div>
-  <div id="overlay">
-    <div class="center-container">
-        <div id="random-word">Loading word...</div>
-    </div>
+
+  <div id="overlay"></div>
+
+  <div class="main-layout">
+
+    <!-- Left: Drivers Standings -->
+    <aside class="side-panel left-panel">
+      <div id="drivers-leaderboard" class="glass-card scrollable-card">
+        <h2 class="card-title">Drivers Championship</h2>
+        <div id="drivers-list"></div>
+      </div>
+    </aside>
+
+    <!-- Center Section: Countdown & Main Info -->
+    <section class="center-panel">
+      <div id="next-race-countdown" class="glass-card featured-card">
+        <h2 id="next-race-label">NEXT RACE</h2>
+        <h1 id="next-race-title">Loading...</h1>
+        <div id="countdown-timer">
+          <!-- Populated by JS -->
+          <div class="loading-spinner"></div>
+        </div>
+        <div id="next-race-details"></div>
+      </div>
+      <div id="race-schedule" class="glass-card" style="display: none;"></div>
+    </section>
+
+    <!-- Right: Constructors Standings -->
+    <aside class="side-panel right-panel">
+      <div id="teams-leaderboard" class="glass-card scrollable-card">
+        <h2 class="card-title">Constructors Championship</h2>
+        <div id="teams-list"></div>
+      </div>
+    </aside>
+
+    <!-- Bottom: Schedule & Controls -->
+    <footer class="bottom-panel">
+      <!-- Controls Centered -->
+      <div id="controls-bar">
+        <div id="toggle-buttons">
+          <button id="f1-button" class="toggle-button" title="F1 Website">
+            <img src="images/f1.svg" alt="F1">
+          </button>
+          <button id="track-button" class="toggle-button" title="Track Details">
+            <img src="images/flag.png" alt="Track">
+          </button>
+          <button id="schedule-button" class="toggle-button" title="Schedule">
+            <img src="images/schedule.png" alt="Schedule">
+          </button>
+          <button id="news-button" class="toggle-button" title="News">
+            <img src="images/news.png" alt="News">
+          </button>
+          <button id="others-button" class="toggle-button" title="More">
+            <img src="images/others.png" alt="Others">
+          </button>
+        </div>
+      </div>
+
+      <div id="others-container" style="display: none">
+        <button id="donate-button" class="others-button" title="Donate">
+          <img src="images/donate.png" alt="Donate">
+        </button>
+        <button id="github-button" class="others-button" title="GitHub">
+          <img src="images/github.png" alt="GitHub">
+        </button>
+        <button id="discord-button" class="others-button" title="Discord">
+          <img src="images/discord.svg" alt="Discord">
+        </button>
+        <button id="blur-button" class="others-button" title="Toggle Blur">
+          <img src="images/blur_on.png" alt="Blur">
+        </button>
+        <button id="darkness-button" class="others-button" title="Toggle Darkness">
+          <img src="images/darkness.png" alt="Darkness">
+        </button>
+        <button id="standings-button" class="others-button" title="Standings">
+          <img src="images/standings.png" alt="Standings">
+        </button>
+        <button id="back-button" class="others-button" title="Back">
+          <img src="images/back.png" alt="Back">
+        </button>
+        <button id="countdown-toggle-button" class="others-button" title="Toggle Countdown">
+          <img src="images/visibility.svg" alt="Toggle Countdown">
+        </button>
+      </div>
+    </footer>
+
   </div>
-  <div id="drivers-leaderboard">
-    <h2>Drivers Championship</h2>
-    <div id="drivers-list"></div>
-  </div>
-  <div id="teams-leaderboard">
-    <h2>Constructors Championship</h2>
-    <div id="teams-list"></div>
-  </div>
-  <div id="race-schedule">
-    <div id="toggle-buttons">
-      <button id="f1-button" class="toggle-button">
-        <img src="images/f1.svg" alt="F1 Website">
-      </button>
-      <button id="track-button" class="toggle-button">
-        <img src="images/flag.png" alt="Track Details">
-      </button>
-      <button id="schedule-button" class="toggle-button">
-        <img src="images/schedule.png" alt="Schedule Details">
-      </button>
-      <button id="news-button" class="toggle-button">
-        <img src="images/news.png" alt="News from F1">
-      </button>
-      <button id="others-button" class="toggle-button">
-        <img src="images/others.png" alt="Other Stuff">
-      </button>
-    </div>
-    <div id="others-container" style="display: none">
-      <button id="donate-button" class="others-button">
-        <img src="images/donate.png" alt="Donate">
-      </button>
-      <button id="github-button" class="others-button">
-        <img src="images/github.png" alt="GitHub">
-      </button>
-      <button id="discord-button" class="others-button">
-        <img src="images/discord.svg" alt="Discord">
-      </button>
-      <button id="blur-button" class="others-button">
-        <img src="images/blur_on.png" alt="Blur Button">
-      </button>
-      <button id="darkness-button" class="others-button">
-        <img src="images/darkness.png" alt="Darkness Button">
-      </button>
-      <button id="standings-button" class="others-button">
-        <img src="images/standings.png" alt="Show Standings">
-      </button>
-      <button id="back-button" class="others-button">
-        <img src="images/back.png" alt="Back Button">
-      </button>
-    </div>
-  </div>
+
   <script src="newtab.js"></script>
 </body>
 

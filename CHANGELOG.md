@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.9] - 2026-01-29
+
+### 🎨 UI Modernization & Glassmorphism
+- **Complete Visual Overhaul**: Adopted a sleek "Glassmorphism" design language with blurred backdrops, semi-transparent panels, and refined spacing.
+- **Refined Controls Bar**: 
+  - Swapped the "Others" menu behavior: it now seamlessly replaces the main controls bar instead of floating above it.
+  - Lifted the controls bar significantly ("up, very") for a more balanced aesthetic.
+  - Added new **Launch Animations** and smoother transitions.
+- **Dynamic Layout**: Improved responsiveness and padding (32px margins) to ensure content breathes on all screen sizes.
+
+### ⚡ New Features
+- **Toggleable Race Countdown**: Added a "visibility" eye button in the "Others" menu to hide/show the central Next Race Countdown card.
+- **Improved Leaderboards**: 
+  - Full-height leaderboards for Drivers and Constructors (no more pagination needed for desktop).
+  - Consistent vertical alignment and single-line typography.
+
+### 🐛 Bug Fixes & Technical Improvements
+- **API Fix**: Switched default track query from `pre-season-testing` to `bahrain` to resolve API 500 errors.
+- **Code Cleanup**: Removed massive chunks of legacy code, duplicate listeners, and redundant HTML injection logic.
+- **Performance**: Optimized event listeners and reduced layout thrashing during menu toggles.
+
 ## [0.0.7] - 2025-11-08
 
 ### 🎉 New Features

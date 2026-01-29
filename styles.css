@@ -1,1153 +1,655 @@
+/* Global Reset & Typography */
+:root {
+  --glass-bg: rgba(20, 20, 20, 0.4);
+  /* Darker base for better contrast */
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --accent-f1: #ff1801;
+  --accent-pos: #ffeb3b;
+}
+
 body,
 html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   overflow: hidden;
-  font-family: 'Roboto', sans-serif;
-  color: #ecf0f1;
+  font-family: 'Outfit', 'Roboto', sans-serif;
+  color: var(--text-main);
+  background: black;
+  /* Fallback color, but not opaque overlapping */
 }
 
-#overlay {
-  position: absolute;
+/* Background Image Container */
+#image-container {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 2;
+  /* Base layer */
+  /* Base layer */
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  /* Layer 2: Effects */
+  /* Layer 2: Effects */
+  pointer-events: none;
+  transition: backdrop-filter 0.3s ease, background 0.3s ease;
+}
+
+#image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fadeIn 1.5s ease-out forwards;
+  /* Ensure it stays visible */
+}
+
+/* Main Layout Grid */
+.main-layout {
+  position: relative;
+  z-index: 3;
+  /* Layer 3: Content */
+  /* Layer 3: Content */
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  /* Left Sidebar, Center, Right Sidebar */
+  grid-template-rows: 1fr auto;
+  /* Main Content, Footer */
+  align-items: center;
+  /* Vertically center all grid items */
+  height: 100vh;
+  /* Max 20px margin from screen edges as requested */
+  padding: 32px;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  /* Centering panels vertically */
+  align-self: center;
+}
+
+.glass-card:hover {
+  background: rgba(30, 30, 30, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Panel Layouts */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Important for scroll */
+  /* Ensure panels stick to edges */
+  width: 100%;
+}
+
+.left-panel {
+  align-items: flex-start;
+}
+
+.right-panel {
+  align-items: flex-end;
+}
+
+
+.center-panel {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: white;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 20px;
-  box-sizing: border-box;
-  animation: fadeIn 2s ease-in-out;
-  backdrop-filter: blur(2px);
+  text-align: center;
 }
 
+.scrollable-card {
+  flex: 0 1 auto;
+  /* Don't grow, but shrink if needed */
+  height: fit-content;
+  /* Only take space needed */
+  /* max-height removed to show all items */
+  overflow: visible;
+  /* No scrollbars */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pagination Controls */
+/* Pagination Controls */
+.pagination-controls,
+.spacer-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding-top: 8px;
+  margin-top: auto;
+  /* Push to bottom if flex column */
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 48px;
+  /* Explicit height including padding to match buttons */
+  box-sizing: border-box;
+}
+
+.spacer-controls {
+  border-top: 1px solid transparent;
+  /* Invisible but keeps space */
+  visibility: hidden;
+  /* Hide content but keep layout space */
+}
+
+.pagination-arrow {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: scale(1.1);
+}
+
+.pagination-arrow:disabled,
+.pagination-arrow.disabled {
+  opacity: 0.3;
+  cursor: default;
+  transform: none;
+}
+
+.arrow-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.scrollable-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+/* Typography Helpers */
 h1,
+h2,
+h3,
 p {
   margin: 0;
 }
 
-#random-word {
-  display: inline-block;
-  font-size: 24px;
-  font-style: italic;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-  word-break: break-word;
-  white-space: pre-wrap;
-  max-width: 400px;  /* Limit width */
-  vertical-align: middle;  /* Align vertically with widget */
-  margin-right: 20px;  /* Space between word and widget */
-  text-align: center;
+.card-title {
+  font-size: 1rem;
+  /* Reduce size to fit single line */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  white-space: nowrap;
+  /* Prevent wrapping */
 }
 
-#lastfm-widget {
-  display: inline-block;
-  width: 456px;
-  height: 100px;
-  vertical-align: middle;  /* Align vertically with word */
-  transform: translateY(-50%);  /* Align with middle of text */
-}
-
-#lastfm-widget img {
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.center-container {
-  display: flex;
-  flex-direction: column;  /* Stack items vertically */
-  align-items: center;     /* Center horizontally */
-  justify-content: center; /* Center vertically */
-  gap: 20px;
-  position: absolute;      /* Position absolutely */
-  top: 50%;               /* Center vertically */
-  left: 50%;              /* Center horizontally */
-  transform: translate(-50%, -50%); /* Perfect centering */
-  width: auto;
-  padding: 20px;
-}
-
-#random-word {
-  font-size: 24px;
-  font-style: italic;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-  word-break: break-word;
-  white-space: pre-wrap;
-  text-align: center;
-  max-width: 800px;       /* Adjust as needed */
-  margin-bottom: 20px;    /* Add bottom margin */
-}
-
-#lastfm-widget {
-  width: 456px;
-  height: 100px;
-}
-
-#lastfm-widget img {
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Responsive design for smaller screens */
-@media (max-width: 500px) {
-  #lastfm-widget {
-    width: 90%;
-  }
-  
-  #random-word {
-    max-width: 90%;
-  }
-}
-
-#drivers-leaderboard,
-#teams-leaderboard {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.7); /* Darker background for better visibility */
-  padding: 15px;
-  border-radius: 8px;
-  color: white;
-  z-index: 10; /* Increased z-index to ensure visibility */
-  width: auto; /* Auto width based on content */
-  min-width: 250px; /* Minimum width */
-  box-sizing: border-box;
-  font-size: 16px;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Stronger shadow */
-  overflow-y: auto; /* Allow scrolling if needed */
-  max-height: 80vh; /* Limit height */
-}
-
-#drivers-leaderboard {
-  max-width: 350px; /* Narrower for driver names */
-}
-
-#teams-leaderboard {
-  max-width: 450px; /* Wider for full team names like "Mercedes-AMG Petronas F1 Team" */
-}
-
-/* ===== Responsive Leaderboard Fitting System =====
- * These classes are dynamically applied by JavaScript to ensure
- * the full driver/constructor list fits without scrollbars.
- * Strategy: compression -> multi-column -> pagination (as last resort)
- */
-
-/* Dynamic compression classes (added via JS) */
-#drivers-leaderboard.compress,
-#teams-leaderboard.compress {
-  overflow-y: hidden; /* we will ensure it fits */
-}
-
-#drivers-leaderboard.compress .leaderboard-item,
-#teams-leaderboard.compress .leaderboard-item {
-  padding: 3px 0; /* tighter vertical spacing */
-}
-
-#drivers-leaderboard.x-compress .leaderboard-item,
-#teams-leaderboard.x-compress .leaderboard-item {
-  padding: 2px 0;
-  font-size: 0.85em;
-}
-
-/* Multi-column fallback if content still overflows */
-/* Displays items horizontally in 2 columns (grid layout) */
-#drivers-leaderboard.multi-column,
-#teams-leaderboard.multi-column {
-  width: 480px; /* Wider container for 2-column layout */
-  max-height: 90vh; /* More vertical space */
-  padding: 10px;
-}
-
-#drivers-leaderboard.multi-column #drivers-list,
-#teams-leaderboard.multi-column #teams-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-flow: row;
-  column-gap: 12px;
-  row-gap: 0;
-}
-
-#drivers-leaderboard.multi-column .leaderboard-item,
-#teams-leaderboard.multi-column .leaderboard-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85em;
-  padding: 2px 0;
-}
-
-#drivers-leaderboard.multi-column h2,
-#teams-leaderboard.multi-column h2 {
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-
-/* Pagination fallback */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.pagination-controls button {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.pagination-controls button.active {
-  background: #e67e22;
-}
-
-.pagination-controls button:hover:not(.active) {
-  background: rgba(255,255,255,0.25);
-}
-
-/* Dynamic compression classes (added via JS) */
-#drivers-leaderboard.compress,
-#teams-leaderboard.compress {
-  overflow: hidden; /* we will ensure it fits */
-}
-
-#drivers-leaderboard.compress .leaderboard-item,
-#teams-leaderboard.compress .leaderboard-item {
-  padding: 3px 0; /* tighter vertical spacing */
-}
-
-#drivers-leaderboard.x-compress .leaderboard-item,
-#teams-leaderboard.x-compress .leaderboard-item {
-  padding: 2px 0;
-  font-size: 0.85em;
-}
-
-/* Multi-column fallback if content still overflows */
-#drivers-leaderboard.multi-column #drivers-list,
-#teams-leaderboard.multi-column #teams-list {
-  column-count: 2;
-  column-gap: 12px;
-}
-
-#drivers-leaderboard.multi-column .leaderboard-item,
-#teams-leaderboard.multi-column .leaderboard-item {
-  break-inside: avoid;
-  display: flex;
-  justify-content: space-between;
-}
-
-/* Pagination fallback */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.pagination-controls button {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.pagination-controls button.active {
-  background: #e67e22;
-}
-
-.pagination-controls button:hover:not(.active) {
-  background: rgba(255,255,255,0.25);
-}
-
-#drivers-leaderboard {
-  left: 10px;
-}
-
-#teams-leaderboard {
-  right: 10px;
-}
-
+/* Leaderboards */
 .leaderboard-item {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  cursor: pointer;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s;
+  cursor: default;
+  /* Animation */
+  opacity: 0;
+  animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered Delay Loop (up to 30 items) */
+.leaderboard-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.leaderboard-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.leaderboard-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.leaderboard-item:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.leaderboard-item:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.leaderboard-item:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.leaderboard-item:nth-child(7) {
+  animation-delay: 0.35s;
+}
+
+.leaderboard-item:nth-child(8) {
+  animation-delay: 0.4s;
+}
+
+.leaderboard-item:nth-child(9) {
+  animation-delay: 0.45s;
+}
+
+.leaderboard-item:nth-child(10) {
+  animation-delay: 0.5s;
+}
+
+.leaderboard-item:nth-child(11) {
+  animation-delay: 0.55s;
+}
+
+.leaderboard-item:nth-child(12) {
+  animation-delay: 0.6s;
+}
+
+.leaderboard-item:nth-child(13) {
+  animation-delay: 0.65s;
+}
+
+.leaderboard-item:nth-child(14) {
+  animation-delay: 0.7s;
+}
+
+.leaderboard-item:nth-child(15) {
+  animation-delay: 0.75s;
+}
+
+.leaderboard-item:nth-child(16) {
+  animation-delay: 0.8s;
+}
+
+.leaderboard-item:nth-child(17) {
+  animation-delay: 0.85s;
+}
+
+.leaderboard-item:nth-child(18) {
+  animation-delay: 0.9s;
+}
+
+.leaderboard-item:nth-child(19) {
+  animation-delay: 0.95s;
+}
+
+.leaderboard-item:nth-child(20) {
+  animation-delay: 1.0s;
+}
+
+/* Add more if needed or let CSS preprocessor handle it in future */
 
 .leaderboard-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.leaderboard-item:last-child {
-  border-bottom: none;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .leaderboard-position {
-  font-weight: bold;
-  color: #ffeb3b;
-  transition: color 0.3s ease;
-}
-
-.leaderboard-position:hover {
-  color: #e67e22;
+  font-weight: 700;
+  color: var(--accent-pos);
+  width: 24px;
 }
 
 .leaderboard-name {
   flex-grow: 1;
   text-align: left;
-  padding-left: 10px;
+  font-weight: 500;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
 }
 
 .leaderboard-points {
-  font-weight: bold;
+  font-weight: 700;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  /* Smaller font as requested */
+  opacity: 0.9;
+  white-space: nowrap;
+  /* Prevent wrapping */
+  flex-shrink: 0;
+  /* Keep size stable */
+  margin-left: 8px;
 }
 
-#race-schedule {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  border-radius: 8px;
-  color: white;
-  z-index: 2;
-  font-size: 16px;
+/* Countdown / Featured Card */
+.featured-card {
+  padding: 32px 56px;
+  /* Compact padding */
+  min-width: 0;
+  display: inline-flex;
+  /* Shrink to fit content */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   width: auto;
+  /* Remove full width */
   box-sizing: border-box;
+
+  /* Make it pop but stay minimal */
+  background: rgba(20, 20, 20, 0.6);
+  /* Slightly darker for contrast */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+#next-race-label {
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  color: var(--accent-f1);
+  font-weight: 700;
+}
+
+#next-race-title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+#countdown-timer {
+  display: flex;
+  gap: 32px;
+  /* Nicer spacing */
+  margin: 12px 0;
+}
+
+.time-unit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-#race-schedule h2 {
-  margin: 0 0 15px 0;
-  font-size: 20px;
-  font-weight: bold;
-  color: #ffeb3b;
+.time-unit span {
+  font-size: 1.8rem;
+  /* Reduced from 3.5rem */
+  font-weight: 700;
+  line-height: 1;
+  font-feature-settings: "tnum";
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-#race-schedule p {
-  margin: 0;
-  font-size: 16px;
+.time-unit label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-top: 8px;
 }
 
-#race-schedule ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+#next-race-details {
+  font-size: 1rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* Bottom Panel */
+.bottom-panel {
+  grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 60px;
+  /* Lift controls significantly */
 }
+
+/* Schedule Hidden/Removed */
+/* race-schedule-wrapper removed from HTML */
 
 #race-schedule ul.horizontal-list {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 24px;
+  list-style: none;
   padding: 0;
   margin: 0;
-  list-style: none;
-}
-
-#race-schedule ul.horizontal-list li {
-  margin: 5px 10px;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 #race-schedule li {
-  margin: 5px 0;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.8;
 }
+
+#race-schedule li.active {
+  opacity: 1;
+  color: var(--accent-f1);
+  font-weight: 700;
+}
+
+/* Controls Bar */
+/* Controls Bar - Centered and Styled */
+#controls-bar {
+  background: rgba(10, 10, 10, 0.6);
+  /* Darker for pop */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 60px;
+  padding: 12px 24px;
+  /* Larger padding */
+
+  /* Layout */
+  display: flex;
+  margin: 0 auto;
+  /* Center in flex container */
+  position: static;
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+#controls-bar:hover {
+  background: rgba(20, 20, 20, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Remove old glass-pill if unused or keep for others */
+.glass-pill {
+  /* Kept for reference or other elements */
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 8px 16px;
+  position: absolute;
+  /* Default absolute for other potential items */
+}
+
+
+
+/* Update toggles to float properly */
+/* cleaned up controls-bar override */
+
+/* If we want controls in the footer center */
+
 
 #toggle-buttons {
   display: flex;
-  align-items: center;
+  gap: 16px;
+  /* More spacing */
 }
 
 .toggle-button,
 .others-button {
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
-  animation: fadeIn 1s ease-in-out;
+  padding: 10px;
+  /* Larger hit area */
+  border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Bouncy pop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-button:hover,
+.others-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.15);
+  /* Grow on hover */
+}
+
+.toggle-button:active,
+.others-button:active {
+  transform: scale(0.95);
 }
 
 .toggle-button img,
 .others-button img {
-  width: 32px;
-  height: 32px;
-  transition: transform 0.3s ease;
+  width: 28px;
+  /* Larger icons */
+  height: 28px;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.toggle-button img:hover,
-.others-button img:hover {
-  transform: scale(1.1);
+.toggle-button:hover img,
+.others-button:hover img {
+  opacity: 1;
 }
 
-.others-container {
+/* Others Menu Popup (Now swapped in place) */
+#others-container {
   display: none;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.5);
-  padding: 20px;
-  border-radius: 8px;
-  color: white;
-  z-index: 2;
-  width: 300px;
-  box-sizing: border-box;
-  font-size: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
+  /* Toggled by JS */
+  /* Static positioning to replace controls */
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 60px;
+  /* Match controls-bar */
+  padding: 12px 24px;
+  /* Match controls-bar */
 
-.horizontal-schedule {
   display: flex;
-  flex-wrap: wrap;
+  /* Will be toggled */
+  gap: 16px;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.2s ease-out;
+  /* Simple fade */
+  z-index: 100;
+  margin: 0 auto;
 }
 
-.horizontal-schedule div {
-  background: rgba(0, 0, 0, 0.5);
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: #ffffff;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-  font-weight: bold;
-}
-
-@media (max-height: 800px) {
-  #random-word {
-    font-size: 18px;
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0);
+    /* No vertical movement */
   }
 
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 10px;
-    padding: 10px;
-    width: 180px;
-  }
-
-  .leaderboard-item {
-    padding: 4px 0;
-  }
-
-  .leaderboard-name {
-    padding-left: 8px;
-  }
-
-  #race-schedule {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  .live-data {
-    width: 95%;
-  }
-
-  .live-data-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
 
-@media (max-height: 600px) {
-  #random-word {
-    font-size: 16px;
-  }
-
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 11px;
-    padding: 8px;
-    width: 150px;
-  }
-
-  .leaderboard-item {
-    padding: 3px 0;
-  }
-
-  .leaderboard-name {
-    padding-left: 6px;
-  }
-
-  #race-schedule {
-    font-size: 12px;
-    padding: 6px;
-  }
-
-  .live-section {
-    padding: 8px;
-  }
-
-  .live-session-header h2 {
-    font-size: 18px;
-  }
-
-  .position-item,
-  .pit-stop-item,
-  .radio-message {
-    padding: 4px;
-    font-size: 11px;
-  }
-}
-
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
-@keyframes bounce {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-#image-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: -1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-
-#image-container img {
-    max-width: none;
-    max-height: none;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-#live-data {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  width: 80%;
-  max-width: 1200px;
-  z-index: 1000;
-}
-
-.live-session-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.live-session-header h2 {
-  color: #ff0000;
-  animation: pulse 2s infinite;
-}
-
-.live-data-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.live-section {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.live-section h3 {
-  margin-top: 0;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 10px;
-}
-
-.race-control-message,
-.position-item,
-.pit-stop-item {
-  margin: 10px 0;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.radio-message {
-  margin: 5px 0;
-  padding: 6px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  font-style: italic;
-}
-.radio-audio {
-  margin: 5px 0;
-  padding: 6px;
-  width: 90%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  font-style: italic;
-}
-
-.driver-number {
-  font-weight: bold;
-  color: #ff0000;
-}
-
-.message-time {
-  color: #888;
-  font-size: 0.9em;
-  margin-right: 10px;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-/* Add these at the end of the file */
-.dev-mode-button {
-  background: #ff4444;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 10px;
-  font-weight: bold;
-  transition: background 0.3s ease;
-}
-
-.dev-mode-button:hover {
-  background: #cc0000;
-}
-
-/* Add dev mode indicator */
-.live-session-header h2[data-dev-mode="true"]::before {
-  content: "[DEV] ";
-  color: #ff4444;
-}
-
-/* Add these new styles */
-.dev-side-section {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  z-index: 1000;
-  display: none; /* Hidden by default */
-}
-
-#dev-left-section {
-  left: 10px;
-}
-
-#dev-right-section {
-  right: 10px;
-}
-
-.dev-bottom-section {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  z-index: 1000;
-  text-align: center;
-  display: none; /* Hidden by default */
-}
-
-/* Ensure dev sections are visible when dev mode is active */
-body[data-dev-mode="true"] .dev-side-section,
-body[data-dev-mode="true"] .dev-bottom-section {
-  display: block !important;
-}
-
-/* Update existing live-section styles for dev mode */
-.dev-side-section .live-section {
-  margin-bottom: 15px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dev-side-section .live-section:last-child {
-  margin-bottom: 0;
-}
-
-/* Make sure dev mode sections are hidden by default */
-#dev-left-section,
-#dev-right-section,
-#dev-bottom-section {
-  display: none;
-}
-
-/* Show dev mode sections when dev mode is active */
-body[data-dev-mode="true"] #dev-left-section,
-body[data-dev-mode="true"] #dev-right-section,
-body[data-dev-mode="true"] #dev-bottom-section {
-  display: block;
-}
-
-/* Add these styles to your existing CSS */
-.position-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.driver-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.driver-number {
-  font-weight: bold;
-  color: #ff0000;
-  min-width: 35px;
-}
-
-.driver-name {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.driver-gap {
-  color: #888;
-  font-size: 0.9em;
-  margin-left: 8px;
-}
-
-.pit-info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.pit-lap {
-  color: #888;
-  font-size: 0.9em;
-}
-
-/* Responsive Design */
-@media (max-height: 1080px) {
-  #random-word {
-    font-size: 12px;
-  }
-
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 12px;
-    padding: 12px;
-    width: 200px;
-  }
-
-  #race-schedule {
-    font-size: 16px;
-    padding: 12px;
-  }
-
-  .live-data-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-  }
-}
-
-@media (max-height: 900px) {
-  #random-word {
-    font-size: 20px;
-  }
-
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 12px;
-    padding: 10px;
-    width: 200px;
-  }
-
-  #race-schedule {
-    font-size: 15px;
-    padding: 10px;
-  }
-
-  .live-data {
-    width: 90%;
-  }
-
-  .live-section {
-    padding: 12px;
-  }
-}
-
-@media (max-height: 480px) {
-  #random-word {
-    font-size: 14px;
-  }
-
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 10px;
-    padding: 6px;
-    width: 140px;
-  }
-
-  .leaderboard-item {
-    padding: 2px 0;
-  }
-
-  #race-schedule {
-    font-size: 11px;
-    padding: 5px;
-  }
-
-  .live-data {
-    padding: 10px;
-  }
-}
-
-/* Width-based responsive design */
+/* Responsive */
 @media (max-width: 1200px) {
-  #random-word {
-    max-width: 100%;
-    margin-bottom: 20px;  /* Add space when widget moves below */
-  }
-
-  #lastfm-widget {
-    display: block;
-    margin: 0 auto;
-    width: calc(100% - 40px);
-  }
-
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 12px;
-  }
-  .dev-side-section {
-    width: 250px;
-  }
-
-  .live-data {
-    max-width: 900px;
-  }
-
-  #lastfm-widget {
-    position: fixed;
-    bottom: 20px;
-    top: auto;
-    right: 20px;
-    transform: none;
-  }
-
-  #random-word {
-    margin-right: 0;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 1024px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 12px;
-    width: 230px; /* Wider on smaller screens */
-  }
-  .live-data {
-    max-width: 900px;
-  }
-  
-  .dev-side-section {
-    width: 220px;
-  }
-}
-
-@media (max-width: 1024px) and (max-height: 600px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    font-size: 11px;
-    width: 200px; /* Keep more width */
+  .main-layout {
+    grid-template-columns: 240px 1fr 240px;
   }
 }
 
 @media (max-width: 900px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 200px; /* Increased width for better readability */
-    font-size: 10px;
-  }
-  .live-data-grid {
-    gap: 12px;
-  }
-}
-
-@media (max-width: 800px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 180px; /* Increased width */
-  }
-}
-
-@media (max-width: 768px) {
-  /* ...existing 768px code... */
-}
-
-@media (max-width: 743px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 140px;
-    font-size: 11px;
-  }
-
-  .live-data {
-    width: 92%;
-    padding: 15px;
-  }
-
-  .live-data-grid {
+  .main-layout {
     grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  #race-schedule {
-    width: 90%;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 640px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 130px;
-    font-size: 10px;
-  }
-
-  .live-section {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 540px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 120px;
-    padding: 8px;
-  }
-
-  .live-data {
-    width: 95%;
-    padding: 12px;
-  }
-}
-
-@media (max-width: 500px) {
-  #lastfm-widget {
-    width: 90%;
-  }
-  
-  #random-word {
-    max-width: 90%;
-  }
-}
-
-@media (max-width: 480px) {
-  /* ...existing 480px code... */
-}
-
-@media (max-width: 414px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 110px;
-    font-size: 9px;
-  }
-
-  .live-data {
-    width: 98%;
-    padding: 10px;
-  }
-}
-
-@media (max-width: 375px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 105px;
-    padding: 5px;
-  }
-
-  .leaderboard-name {
-    padding-left: 3px;
-  }
-}
-
-@media (max-width: 360px) {
-  /* ...existing 360px code... */
-}
-
-@media (max-width: 320px) {
-  /* ...existing 320px code... */
-}
-
-/* Additional safeguard for very small screens */
-@media (max-width: 280px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 80px;
-    font-size: 7px;
-    padding: 2px;
-  }
-
-  .leaderboard-name {
-    padding-left: 2px;
-  }
-
-  #race-schedule {
-    font-size: 8px;
-    padding: 3px;
-  }
-
-  .live-data {
-    padding: 5px;
-  }
-}
-
-/* Combined width and height checks for problematic resolutions */
-@media (max-width: 743px) and (max-height: 590px) {
-  #drivers-leaderboard,
-  #teams-leaderboard {
-    width: 130px;
-    font-size: 10px;
-    padding: 6px;
-  }
-
-  .live-data {
-    height: 85vh;
+    grid-template-rows: auto auto auto auto;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
 
-  #race-schedule {
-    bottom: 5px;
-    font-size: 11px;
+  .side-panel {
+    height: 300px;
+    flex-shrink: 0;
   }
 
-  .live-session-header h2 {
-    font-size: 16px;
-  }
-}
-
-/* Add these new styles */
-.year-selector {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 5px 0;
-  padding: 8px; /* Increased padding */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* More visible border */
-}
-
-.year-button {
-  background: rgba(255, 255, 255, 0.2); /* More visible button */
-  border: none;
-  padding: 8px 20px; /* Larger clickable area */
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-weight: bold; /* Make text more visible */
-  font-size: 14px; /* Ensure readable size */
-}
-
-.leaderboard-message {
-  text-align: center;
-  padding: 20px;
-  color: #ffffff;
-  font-size: 16px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  margin: 10px 0;
-}
-
-/* Add these new styles */
-#lastfm-widget {
-    position: relative;  /* Change from absolute to relative */
-    display: inline-block;  /* Allow content to sit side by side */
-    width: 456px;
-    height: 100px;
-    z-index: 100;
-    margin-left: 20px;  /* Add some space between word and widget */
-    vertical-align: middle;  /* Align with the word */
-}
-
-#lastfm-widget img {
-    width: 100%;
-    height: 100%;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Add responsive styles for smaller screens */
-@media (max-width: 1000px) {
-  #random-word {
-    display: block;
-    margin: 0 auto 20px auto;
-    max-width: 90%;
+  .center-panel {
+    order: -1;
+    /* Show countdown first */
+    margin-bottom: 24px;
   }
 
-  #lastfm-widget {
-    display: block;
-    margin: 0 auto;
-    width: 90%;
+  #controls-bar {
+    margin: 20px auto;
   }
 }
