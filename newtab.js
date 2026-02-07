@@ -1599,7 +1599,10 @@ document.addEventListener('keydown', (event) => {
       showSchedule = false;
       // Just hide/reset schedule here if needed, or rely on other logic
       // For now, let's just ensure we don't break
-      if (raceScheduleContainer) raceScheduleContainer.innerHTML = '';
+      if (raceScheduleContainer) {
+        raceScheduleContainer.innerHTML = '';
+        raceScheduleContainer.style.display = 'none';
+      }
       if (controlsBar) controlsBar.style.display = 'flex';
       const toggleButtons = document.getElementById('toggle-buttons');
       if (toggleButtons) toggleButtons.style.display = 'flex';
