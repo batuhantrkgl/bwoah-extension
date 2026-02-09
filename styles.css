@@ -455,6 +455,16 @@ p {
 /* Schedule Hidden/Removed */
 /* race-schedule-wrapper removed from HTML */
 
+#race-schedule {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: max-content;
+  max-width: 90%;
+}
+
 #race-schedule ul.horizontal-list {
   display: flex;
   gap: 24px;
