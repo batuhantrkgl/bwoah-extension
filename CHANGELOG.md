@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.10] - 2026-03-14
+### Fixes
+- **Standings API Fallback**: Fixed an issue where new rookie drivers or new teams (Audi, Cadillac) without points displayed as `undefined` by implementing dynamic position numbers.
+- **2026 Grid Update**: Added `Audi` and `Cadillac F1 Team` to the fallback display order and team mappings.
+
 ## [0.0.9] - 2026-01-29
 
 ### 🎨 UI Modernization & Glassmorphism

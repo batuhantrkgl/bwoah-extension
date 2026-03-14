@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bwoah! - Your F1 Homepage",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Bwoah! - Your F1 Homepage: Up-to-date race schedules, leaderboards, and F1 images for enthusiasts.",
   "action": {
     "default_icon": {
