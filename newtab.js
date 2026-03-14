@@ -52,7 +52,9 @@ const teamNameMapping = {
   "Williams": "Williams Racing",
   "RB F1 Team": "Visa Cash App RB F1 Team",
   "Haas F1 Team": "MoneyGram Haas F1 Team",
-  "Sauber": "Stake F1 Team Kick Sauber"
+  "Sauber": "Stake F1 Team Kick Sauber",
+  "Audi": "Audi F1 Team",
+  "Cadillac F1 Team": "Cadillac F1 Team"
 };
 
 const REAL_TEAM_RADIO_CLIPS = {
@@ -844,17 +846,17 @@ const fetchLeaderboard = debounce(async (year = new Date().getFullYear()) => {
         const driversStandings = driversData.MRData.StandingsTable.StandingsLists[0].DriverStandings;
         const teamsStandings = teamsData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
 
-        driversList.innerHTML = driversStandings.map(driver => `
+        driversList.innerHTML = driversStandings.map((driver, index) => `
           <div class="leaderboard-item" data-url="https://www.formula1.com/en/drivers/${driver.Driver.givenName.toLowerCase()}-${driver.Driver.familyName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}">
-            <span class="leaderboard-position">${driver.position}</span>
-            <span class="leaderboard-name">#${driver.Driver.permanentNumber} ${driver.Driver.givenName} ${driver.Driver.familyName}</span>
+            <span class="leaderboard-position">${driver.position || (index + 1)}</span>
+            <span class="leaderboard-name">#${driver.Driver.permanentNumber || '?'} ${driver.Driver.givenName} ${driver.Driver.familyName}</span>
             <span class="leaderboard-points">${driver.points} pts</span>
           </div>
         `).join('');
 
-        teamsList.innerHTML = teamsStandings.map(team => `
+        teamsList.innerHTML = teamsStandings.map((team, index) => `
           <div class="leaderboard-item" data-url="https://www.formula1.com/en/teams/${team.Constructor.name.toLowerCase().replace(/\s+/g, '-').replace("red-bull-racing", "red-bull").replace("alpine-f1-team", "alpine").replace("sauber", "kick-sauber").replace("rb-f1-team", "rb").replace("haas-f1-team", "haas").replace("red-bull", "red-bull-racing")}">
-            <span class="leaderboard-position">${team.position}</span>
+            <span class="leaderboard-position">${team.position || (index + 1)}</span>
             <span class="leaderboard-name">${teamNameMapping[team.Constructor.name] || team.Constructor.name}</span>
             <span class="leaderboard-points">${team.points} pts</span>
           </div>
@@ -1113,7 +1115,9 @@ const FALLBACK_DRIVERS_ORDER = [
   'haas',
   'rb',
   'sauber',
-  'williams'
+  'williams',
+  'audi',
+  'cadillac'
 ];
 
 function sortDriversByTeam(drivers, constructors) {
