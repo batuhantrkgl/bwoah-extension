@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.11] - 2026-05-10
+### Changes & Fixes:
+- Keeping Things Running (I've forgot what i changed.)
+
 ## [0.0.10] - 2026-03-14
 ### Fixes
 - **Standings API Fallback**: Fixed an issue where new rookie drivers or new teams (Audi, Cadillac) without points displayed as `undefined` by implementing dynamic position numbers.

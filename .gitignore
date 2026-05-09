@@ -1,1 +1,10 @@
 .idea/
+.vscode/
+
+# Build artifacts — distribute via GitHub Releases instead
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

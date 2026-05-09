@@ -1,15 +1,12 @@
-/* Global Reset & Typography */
 :root {
-  --glass-bg: rgba(20, 20, 20, 0.4);
-  /* Darker base for better contrast */
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(20, 20, 20, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.15);
   --glass-highlight: rgba(255, 255, 255, 0.05);
   --text-main: #ffffff;
   --text-muted: rgba(255, 255, 255, 0.7);
   --accent-f1: #ff1801;
   --accent-pos: #ffeb3b;
 }
-
 body,
 html {
   margin: 0;
@@ -20,10 +17,7 @@ html {
   font-family: 'Outfit', 'Roboto', sans-serif;
   color: var(--text-main);
   background: black;
-  /* Fallback color, but not opaque overlapping */
 }
-
-/* Background Image Container */
 #image-container {
   position: fixed;
   top: 0;
@@ -31,10 +25,7 @@ html {
   width: 100%;
   height: 100%;
   z-index: 2;
-  /* Base layer */
-  /* Base layer */
 }
-
 #overlay {
   position: fixed;
   top: 0;
@@ -42,77 +33,53 @@ html {
   width: 100%;
   height: 100%;
   z-index: 2;
-  /* Layer 2: Effects */
-  /* Layer 2: Effects */
   pointer-events: none;
   transition: backdrop-filter 0.3s ease, background 0.3s ease;
 }
-
 #image-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   animation: fadeIn 1.5s ease-out forwards;
-  /* Ensure it stays visible */
 }
-
-/* Main Layout Grid */
 .main-layout {
   position: relative;
   z-index: 3;
-  /* Layer 3: Content */
-  /* Layer 3: Content */
   display: grid;
   grid-template-columns: 280px 1fr 280px;
-  /* Left Sidebar, Center, Right Sidebar */
   grid-template-rows: 1fr auto;
-  /* Main Content, Footer */
   align-items: center;
-  /* Vertically center all grid items */
   height: 100vh;
-  /* Max 20px margin from screen edges as requested */
   padding: 32px;
 }
-
-/* Glassmorphism Cards */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.05); 
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
   overflow: hidden;
-  /* Centering panels vertically */
   align-self: center;
 }
-
 .glass-card:hover {
   background: rgba(30, 30, 30, 0.5);
   border-color: rgba(255, 255, 255, 0.2);
 }
-
-/* Panel Layouts */
 .side-panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* Important for scroll */
-  /* Ensure panels stick to edges */
   width: 100%;
 }
-
 .left-panel {
   align-items: flex-start;
 }
-
 .right-panel {
   align-items: flex-end;
 }
-
-
 .center-panel {
   display: flex;
   flex-direction: column;
@@ -120,22 +87,14 @@ html {
   align-items: center;
   text-align: center;
 }
-
 .scrollable-card {
   flex: 0 1 auto;
-  /* Don't grow, but shrink if needed */
   height: fit-content;
-  /* Only take space needed */
-  /* max-height removed to show all items */
   overflow: visible;
-  /* No scrollbars */
   width: 100%;
   display: flex;
   flex-direction: column;
 }
-
-/* Pagination Controls */
-/* Pagination Controls */
 .pagination-controls,
 .spacer-controls {
   display: flex;
@@ -144,21 +103,15 @@ html {
   gap: 16px;
   padding-top: 8px;
   margin-top: auto;
-  /* Push to bottom if flex column */
   width: 100%;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   min-height: 48px;
-  /* Explicit height including padding to match buttons */
   box-sizing: border-box;
 }
-
 .spacer-controls {
   border-top: 1px solid transparent;
-  /* Invisible but keeps space */
   visibility: hidden;
-  /* Hide content but keep layout space */
 }
-
 .pagination-arrow {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -172,41 +125,33 @@ html {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .pagination-arrow:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   transform: scale(1.1);
 }
-
 .pagination-arrow:disabled,
 .pagination-arrow.disabled {
   opacity: 0.3;
   cursor: default;
   transform: none;
 }
-
 .arrow-icon {
   width: 14px;
   height: 14px;
 }
-
 .scrollable-card::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
-
-/* Typography Helpers */
 h1,
 h2,
 h3,
 p {
   margin: 0;
 }
-
 .card-title {
   font-size: 1rem;
-  /* Reduce size to fit single line */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -215,10 +160,40 @@ p {
   border-bottom: 1px solid var(--glass-border);
   color: var(--text-muted);
   white-space: nowrap;
-  /* Prevent wrapping */
 }
-
-/* Leaderboards */
+#drivers-leaderboard #year-selector-container {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 16px 0 !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+#drivers-leaderboard .year-button {
+  display: inline-block !important;
+  font-weight: 700 !important;
+  color: var(--text-muted) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+#drivers-leaderboard .year-button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-main) !important;
+}
+#drivers-leaderboard .year-button.active {
+  background: var(--accent-f1) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(255, 24, 1, 0.3) !important;
+}
 .leaderboard-item {
   display: flex;
   justify-content: space-between;
@@ -229,116 +204,46 @@ p {
   background: rgba(255, 255, 255, 0.02);
   transition: background 0.2s;
   cursor: default;
-  /* Animation */
   opacity: 0;
   animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
-/* Staggered Delay Loop (up to 30 items) */
-.leaderboard-item:nth-child(1) {
-  animation-delay: 0.05s;
+body.is-scrolling #controls-bar,
+body.is-scrolling #others-container {
+  opacity: 0.2;
+  pointer-events: none;
 }
-
-.leaderboard-item:nth-child(2) {
-  animation-delay: 0.1s;
+.leaderboard-item {
+  animation-delay: calc(var(--index, 0) * 0.05s);
 }
-
-.leaderboard-item:nth-child(3) {
-  animation-delay: 0.15s;
+.privacy-mask {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+  user-select: none;
 }
-
-.leaderboard-item:nth-child(4) {
-  animation-delay: 0.2s;
+.privacy-mask:hover,
+.privacy-mask:focus,
+.privacy-mask:active {
+  filter: blur(0px);
+  user-select: auto;
 }
-
-.leaderboard-item:nth-child(5) {
-  animation-delay: 0.25s;
-}
-
-.leaderboard-item:nth-child(6) {
-  animation-delay: 0.3s;
-}
-
-.leaderboard-item:nth-child(7) {
-  animation-delay: 0.35s;
-}
-
-.leaderboard-item:nth-child(8) {
-  animation-delay: 0.4s;
-}
-
-.leaderboard-item:nth-child(9) {
-  animation-delay: 0.45s;
-}
-
-.leaderboard-item:nth-child(10) {
-  animation-delay: 0.5s;
-}
-
-.leaderboard-item:nth-child(11) {
-  animation-delay: 0.55s;
-}
-
-.leaderboard-item:nth-child(12) {
-  animation-delay: 0.6s;
-}
-
-.leaderboard-item:nth-child(13) {
-  animation-delay: 0.65s;
-}
-
-.leaderboard-item:nth-child(14) {
-  animation-delay: 0.7s;
-}
-
-.leaderboard-item:nth-child(15) {
-  animation-delay: 0.75s;
-}
-
-.leaderboard-item:nth-child(16) {
-  animation-delay: 0.8s;
-}
-
-.leaderboard-item:nth-child(17) {
-  animation-delay: 0.85s;
-}
-
-.leaderboard-item:nth-child(18) {
-  animation-delay: 0.9s;
-}
-
-.leaderboard-item:nth-child(19) {
-  animation-delay: 0.95s;
-}
-
-.leaderboard-item:nth-child(20) {
-  animation-delay: 1.0s;
-}
-
-/* Add more if needed or let CSS preprocessor handle it in future */
-
 .leaderboard-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-
 .leaderboard-position {
   font-weight: 700;
   color: var(--accent-pos);
   width: 24px;
 }
-
 .leaderboard-name {
   flex-grow: 1;
   text-align: left;
@@ -348,7 +253,6 @@ p {
   text-overflow: ellipsis;
   padding: 0 8px;
 }
-
 .leaderboard-points {
   font-weight: 700;
   color: var(--text-main);
@@ -356,44 +260,31 @@ p {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.75em;
-  /* Smaller font as requested */
   opacity: 0.9;
   white-space: nowrap;
-  /* Prevent wrapping */
   flex-shrink: 0;
-  /* Keep size stable */
   margin-left: 8px;
 }
-
-/* Countdown / Featured Card */
 .featured-card {
   padding: 32px 56px;
-  /* Compact padding */
   min-width: 0;
   display: inline-flex;
-  /* Shrink to fit content */
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
   width: auto;
-  /* Remove full width */
   box-sizing: border-box;
-
-  /* Make it pop but stay minimal */
   background: rgba(20, 20, 20, 0.6);
-  /* Slightly darker for contrast */
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
 }
-
 #next-race-label {
   font-size: 0.9rem;
   letter-spacing: 3px;
   color: var(--accent-f1);
   font-weight: 700;
 }
-
 #next-race-title {
   font-size: 2rem;
   font-weight: 700;
@@ -401,29 +292,23 @@ p {
   line-height: 1.1;
   margin-bottom: 8px;
 }
-
 #countdown-timer {
   display: flex;
   gap: 32px;
-  /* Nicer spacing */
   margin: 12px 0;
 }
-
 .time-unit {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .time-unit span {
   font-size: 1.8rem;
-  /* Reduced from 3.5rem */
   font-weight: 700;
   line-height: 1;
   font-feature-settings: "tnum";
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-
 .time-unit label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -431,7 +316,6 @@ p {
   letter-spacing: 1px;
   margin-top: 8px;
 }
-
 #next-race-details {
   font-size: 1rem;
   color: var(--text-muted);
@@ -439,8 +323,6 @@ p {
   padding: 8px 16px;
   border-radius: 20px;
 }
-
-/* Bottom Panel */
 .bottom-panel {
   grid-column: 1 / -1;
   display: flex;
@@ -449,12 +331,7 @@ p {
   gap: 20px;
   position: relative;
   padding-bottom: 60px;
-  /* Lift controls significantly */
 }
-
-/* Schedule Hidden/Removed */
-/* race-schedule-wrapper removed from HTML */
-
 #race-schedule {
   position: absolute;
   bottom: 120px;
@@ -464,7 +341,6 @@ p {
   width: max-content;
   max-width: 90%;
 }
-
 #race-schedule ul.horizontal-list {
   display: flex;
   gap: 24px;
@@ -472,173 +348,147 @@ p {
   padding: 0;
   margin: 0;
 }
-
 #race-schedule li {
   font-size: 0.9rem;
   font-weight: 500;
   opacity: 0.8;
 }
-
 #race-schedule li.active {
   opacity: 1;
   color: var(--accent-f1);
   font-weight: 700;
 }
-
-/* Controls Bar */
-/* Controls Bar - Centered and Styled */
 #controls-bar {
-  background: rgba(10, 10, 10, 0.6);
-  /* Darker for pop */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 60px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
   padding: 12px 24px;
-  /* Larger padding */
-
-  /* Layout */
+  margin: 0 24px;
   display: flex;
-  margin: 0 auto;
-  /* Center in flex container */
   position: static;
   transform: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.05); 
+  transition: all 0.3s ease, opacity 0.5s ease;
 }
-
 #controls-bar:hover {
   background: rgba(20, 20, 20, 0.8);
   border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
-
-/* Remove old glass-pill if unused or keep for others */
-.glass-pill {
-  /* Kept for reference or other elements */
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 50px;
-  padding: 8px 16px;
-  position: absolute;
-  /* Default absolute for other potential items */
-}
-
-
-
-/* Update toggles to float properly */
-/* cleaned up controls-bar override */
-
-/* If we want controls in the footer center */
-
-
 #toggle-buttons {
   display: flex;
   gap: 16px;
-  /* More spacing */
 }
-
 .toggle-button,
 .others-button {
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 10px;
-  /* Larger hit area */
   border-radius: 50%;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Bouncy pop */
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .toggle-button:hover,
 .others-button:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: scale(1.15);
-  /* Grow on hover */
 }
-
 .toggle-button:active,
 .others-button:active {
   transform: scale(0.95);
 }
-
 .toggle-button img,
 .others-button img {
   width: 28px;
-  /* Larger icons */
   height: 28px;
   opacity: 0.85;
-  transition: opacity 0.2s;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .toggle-button:hover img,
 .others-button:hover img {
   opacity: 1;
 }
-
-/* Others Menu Popup (Now swapped in place) */
 #others-container {
-  display: none;
-  /* Toggled by JS */
-  /* Static positioning to replace controls */
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 60px;
-  /* Match controls-bar */
   padding: 12px 24px;
-  /* Match controls-bar */
-
   display: flex;
-  /* Will be toggled */
   gap: 16px;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   animation: fadeIn 0.2s ease-out;
-  /* Simple fade */
   z-index: 100;
   margin: 0 auto;
 }
-
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 0);
-    /* No vertical movement */
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+#search-mode-container {
+  display: flex;
+  align-items: center;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 60px;
+  padding: 8px 16px 8px 8px; 
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  width: 450px;
+  max-width: 90vw;
+  gap: 12px;
+  margin: 0 auto;
 }
-
-/* Animations */
+#search-form {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 8px 16px;
+  transition: background 0.3s;
+}
+#search-form:focus-within {
+  background: rgba(255, 255, 255, 0.2);
+}
+.search-form-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  margin-right: 12px;
+}
+#main-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 1.05rem;
+  outline: none;
+}
+#main-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
 }
-
-/* Responsive */
 @media (max-width: 1200px) {
   .main-layout {
     grid-template-columns: 240px 1fr 240px;
   }
 }
-
 @media (max-width: 900px) {
   .main-layout {
     grid-template-columns: 1fr;
@@ -647,18 +497,14 @@ p {
     display: flex;
     flex-direction: column;
   }
-
   .side-panel {
     height: 300px;
     flex-shrink: 0;
   }
-
   .center-panel {
     order: -1;
-    /* Show countdown first */
     margin-bottom: 24px;
   }
-
   #controls-bar {
     margin: 20px auto;
   }

@@ -1,109 +1,105 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>New Tab with Bwoah Extension</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-  </style>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Bwoah! — Your F1 Homepage with race schedules, leaderboards, and stunning F1 photography.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
-
 <body>
   <div id="image-container">
     <img src="" alt="Background Image">
   </div>
-
   <div id="overlay"></div>
-
   <div class="main-layout">
-
-    <!-- Left: Drivers Standings -->
     <aside class="side-panel left-panel">
       <div id="drivers-leaderboard" class="glass-card scrollable-card">
         <h2 class="card-title">Drivers Championship</h2>
+        <div id="year-selector-container"></div>
         <div id="drivers-list"></div>
       </div>
     </aside>
-
-    <!-- Center Section: Countdown & Main Info -->
     <section class="center-panel">
       <div id="next-race-countdown" class="glass-card featured-card">
         <h2 id="next-race-label">NEXT RACE</h2>
         <h1 id="next-race-title">Loading...</h1>
         <div id="countdown-timer">
-          <!-- Populated by JS -->
           <div class="loading-spinner"></div>
         </div>
         <div id="next-race-details"></div>
       </div>
     </section>
-
-    <!-- Right: Constructors Standings -->
     <aside class="side-panel right-panel">
       <div id="teams-leaderboard" class="glass-card scrollable-card">
         <h2 class="card-title">Constructors Championship</h2>
         <div id="teams-list"></div>
       </div>
     </aside>
-
-    <!-- Bottom: Schedule & Controls -->
     <footer class="bottom-panel">
-      <!-- Schedule / Details Container -->
       <div id="race-schedule" class="glass-card" style="display: none;"></div>
-
-      <!-- Controls Centered -->
       <div id="controls-bar">
         <div id="toggle-buttons">
-          <button id="f1-button" class="toggle-button" title="F1 Website">
+          <button id="f1-button" class="toggle-button" title="F1 Website" aria-label="Open F1 Website">
             <img src="images/f1.svg" alt="F1">
           </button>
-          <button id="track-button" class="toggle-button" title="Track Details">
+          <button id="track-button" class="toggle-button" title="Track Details" aria-label="Show Track Details">
             <img src="images/flag.png" alt="Track">
           </button>
-          <button id="schedule-button" class="toggle-button" title="Schedule">
+          <button id="schedule-button" class="toggle-button" title="Schedule" aria-label="Show Race Schedule">
             <img src="images/schedule.png" alt="Schedule">
           </button>
-          <button id="news-button" class="toggle-button" title="News">
+          <button id="news-button" class="toggle-button" title="News" aria-label="Open F1 News">
             <img src="images/news.png" alt="News">
           </button>
-          <button id="others-button" class="toggle-button" title="More">
+          <button id="others-button" class="toggle-button" title="More" aria-label="Show More Options">
             <img src="images/others.png" alt="Others">
           </button>
         </div>
       </div>
-
       <div id="others-container" style="display: none">
-        <button id="donate-button" class="others-button" title="Donate">
+        <button id="donate-button" class="others-button" title="Donate" aria-label="Donate">
           <img src="images/donate.png" alt="Donate">
         </button>
-        <button id="github-button" class="others-button" title="GitHub">
+        <button id="github-button" class="others-button" title="GitHub" aria-label="Open GitHub Repository">
           <img src="images/github.png" alt="GitHub">
         </button>
-        <button id="discord-button" class="others-button" title="Discord">
+        <button id="discord-button" class="others-button" title="Discord" aria-label="Open Community Discussions">
           <img src="images/discord.svg" alt="Discord">
         </button>
-        <button id="blur-button" class="others-button" title="Toggle Blur">
+        <button id="blur-button" class="others-button" title="Toggle Blur" aria-label="Toggle Background Blur">
           <img src="images/blur_on.png" alt="Blur">
         </button>
-        <button id="darkness-button" class="others-button" title="Toggle Darkness">
+        <button id="darkness-button" class="others-button" title="Toggle Darkness" aria-label="Toggle Darkness Overlay">
           <img src="images/darkness.png" alt="Darkness">
         </button>
-        <button id="standings-button" class="others-button" title="Standings">
+        <button id="standings-button" class="others-button" title="Standings" aria-label="Toggle Standings Visibility">
           <img src="images/standings.png" alt="Standings">
         </button>
-        <button id="back-button" class="others-button" title="Back">
+        <button id="back-button" class="others-button" title="Back" aria-label="Go Back">
           <img src="images/back.png" alt="Back">
         </button>
-        <button id="countdown-toggle-button" class="others-button" title="Toggle Countdown">
-          <img src="images/visibility.svg" alt="Toggle Countdown">
+        <button id="countdown-toggle-button" class="others-button" title="Toggle Countdown" aria-label="Toggle Countdown Visibility">
+          <img src="images/visibility.svg?v=1" alt="Toggle Countdown">
+        </button>
+        <button id="search-toggle-button" class="others-button" title="Enable Search Bar" aria-label="Enable Search Bar">
+          <img src="images/search.svg?v=1" alt="Enable Search Bar">
         </button>
       </div>
+      <div id="search-mode-container" style="display: none;">
+        <button id="disable-search-button" class="toggle-button" title="Back to Apps" aria-label="Disable Search Mode">
+          <img src="images/apps.svg?v=1" alt="Apps" style="opacity: 1;">
+        </button>
+        <form action="https://www.google.com/search" method="GET" id="search-form">
+          <img src="images/search.svg?v=1" alt="Search" class="search-form-icon">
+          <input type="text" name="q" id="main-search-input" placeholder="Search..." autocomplete="off">
+        </form>
+      </div>
     </footer>
-
   </div>
-
-  <script src="newtab.js"></script>
+  <script src="newtab.js?v=3"></script>
 </body>
-
-</html>
+</html>
