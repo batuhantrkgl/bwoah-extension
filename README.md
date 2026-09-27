@@ -1,6 +1,6 @@
 # Bwoah! - Your F1 Homepage 🏎️
 
-[![Version](https://img.shields.io/badge/version-0.0.11-red.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-0.0.12-white.svg)](manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Bwoah!** is a modern, privacy-focused browser extension that transforms your new tab into an interactive Formula 1 dashboard.

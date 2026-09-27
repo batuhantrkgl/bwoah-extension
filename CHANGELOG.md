@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.12] - 2026-09-27
+### 🎨 UI Modernization & Spacing
+- **Frosted Glass & Graphite Theme**: Converted harsh red accents to modern translucent glassmorphism with subtle silver borders and graphite contrast.
+- **Tabler Icons Integration**: Replaced legacy emojis and custom icons with crisp vector Tabler Icons throughout the extension.
+- **Settings Modal**: Re-architected settings with a tabbed interface (Appearance, Widgets, F1 Links, About).
+- **Layout Spacing**: Added 20px floating gap between the schedule/settings popovers and the bottom dock, plus 12px vertical spacing between cards in settings panels.
+- **Standings Pagination**: Paginated driver standings (10 per page) to eliminate scrollbars on compact viewports.
+
+### ⚡ Architectural Refactor & Tests
+- **Modular Codebase**: Split monolithic `newtab.js` into clean, testable ES modules (`js/constants`, `images`, `leaderboards`, `schedule`, `storage`, `ui`, `utils`).
+- **Automated Test Suite**: Added 24 unit and schema validation tests running on `bun test`.
+- **Packaging Pipeline**: Cross-browser packaging scripts for Chrome and Firefox zip distributions.
+
 ## [0.0.11] - 2026-05-10
 ### Changes & Fixes:
 - Keeping Things Running (I've forgot what i changed.)
