@@ -2,6 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-0.0.12-white.svg)](manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Privacy Policy](https://img.shields.io/badge/Privacy-Policy-brightgreen.svg)](PRIVACY.md)
 
 **Bwoah!** is a modern, privacy-focused browser extension that transforms your new tab into an interactive Formula 1 dashboard.
 
@@ -55,6 +56,10 @@ To generate zip distributions for Chrome Web Store and Firefox Add-ons:
 ```bash
 bun run build:zip
 ```
+
+## 🔒 Privacy Policy
+
+Bwoah! does not collect, track, or share any personal data. All user preferences and cache data remain 100% local to your browser. For full details, read our [Privacy Policy](PRIVACY.md).
 
 ## 📄 License
 

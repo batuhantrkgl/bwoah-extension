@@ -68,11 +68,14 @@ describe("Assets & Files Integrity", () => {
     expect(drivers["30"]).toBe("Liam Lawson");
   });
 
-  test("LICENSE and README.md exist and are non-empty", () => {
+  test("LICENSE, README.md, and PRIVACY.md exist and are non-empty", () => {
     expect(existsSync(join(rootDir, "LICENSE"))).toBe(true);
     expect(readFileSync(join(rootDir, "LICENSE"), "utf8").length).toBeGreaterThan(50);
 
     expect(existsSync(join(rootDir, "README.md"))).toBe(true);
     expect(readFileSync(join(rootDir, "README.md"), "utf8").length).toBeGreaterThan(50);
+
+    expect(existsSync(join(rootDir, "PRIVACY.md"))).toBe(true);
+    expect(readFileSync(join(rootDir, "PRIVACY.md"), "utf8").length).toBeGreaterThan(50);
   });
 });
