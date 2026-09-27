@@ -1,0 +1,18 @@
+{
+  "name": "bwoah-extension",
+  "version": "0.0.11",
+  "description": "Bwoah! - Your F1 Homepage: Up-to-date race schedules, leaderboards, and F1 images for enthusiasts.",
+  "private": true,
+  "scripts": {
+    "test": "bun test",
+    "build:chrome": "mkdir -p dist && zip -r dist/bwoah-chrome.zip manifest.json background.js newtab.html newtab.js js styles.css icons images jsons LICENSE README.md -x '*.DS_Store*'",
+    "build:firefox": "mkdir -p dist && cp manifest.firefox.json manifest.temp.json && mv manifest.json manifest.chrome.json && mv manifest.temp.json manifest.json && zip -r dist/bwoah-firefox.zip manifest.json background.js newtab.html newtab.js js styles.css icons images jsons LICENSE README.md -x '*.DS_Store*' && mv manifest.json manifest.firefox.json && mv manifest.chrome.json manifest.json",
+    "build:zip": "bun run build:chrome && bun run build:firefox"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}

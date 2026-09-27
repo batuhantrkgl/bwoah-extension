@@ -1,8 +1,11 @@
+node_modules/
+bun.lock*
 .idea/
 .vscode/
 
 # Build artifacts — distribute via GitHub Releases instead
 *.zip
+dist/
 
 # OS files
 .DS_Store

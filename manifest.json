@@ -8,7 +8,8 @@
       "16": "icons/Bwoah_Extension_Red-16.png",
       "48": "icons/Bwoah_Extension_Red-48.png",
       "128": "icons/Bwoah_Extension_Red-128.png"
-    }
+    },
+    "default_title": "Bwoah! - Open F1 Homepage"
   },
   "background": {
     "service_worker": "background.js"
@@ -25,16 +26,14 @@
     "storage"
   ],
   "host_permissions": [
-    "https://www.reddit.com/*"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "images/*"
-      ],
-      "matches": [
-        "chrome-extension://*/*"
-      ]
-    }
+    "https://www.reddit.com/*",
+    "https://api.pullpush.io/*",
+    "https://i.redd.it/*",
+    "https://preview.redd.it/*",
+    "https://api.jolpi.ca/*",
+    "https://raw.githubusercontent.com/*",
+    "https://api.openf1.org/*",
+    "https://media.formula1.com/*",
+    "https://f1-circuit-api.vercel.app/*"
   ]
 }
